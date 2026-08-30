@@ -3,302 +3,451 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RB Coin - Зарабатывай монеты!</title>
+    <title>RB Coin Clicker</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            background-color: black;
+            color: white;
+            font-family: 'Arial', sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            min-height: 100vh;
+            position: relative;
         }
 
-        .container {
-            max-width: 400px;
+        /* Живые обои со звездами */
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 25px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            text-align: center;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
         }
 
-        .coin-logo {
-            width: 120px;
-            height: 120px;
-            margin: 0 auto 20px;
-            display: block;
+        .star {
+            position: absolute;
+            background-color: white;
             border-radius: 50%;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            animation: twinkle 3s infinite ease-in-out, fall 5s linear infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+        }
+
+        .game-container {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            width: 100%;
+            max-width: 600px; /* Ограничение ширины для лучшего отображения */
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         h1 {
-            color: #333;
-            font-size: 32px;
-            margin-bottom: 10px;
-            font-weight: 800;
-            letter-spacing: 1px;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #00aaff, 0 0 20px #00aaff;
         }
 
-        .tagline {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-
-        .counter {
-            background: linear-gradient(135deg, #ffd700, #ffaa00);
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 25px;
-            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.3);
-        }
-
-        .counter-label {
-            color: #8B6914;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        #coinCount {
-            font-size: 48px;
-            font-weight: 900;
-            color: #fff;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        .mine-btn {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            font-size: 18px;
-            font-weight: 700;
-            border-radius: 50px;
+        .coin-container {
+            margin-top: 40px;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
-            margin-bottom: 15px;
+            position: relative;
+            display: inline-block;
+            animation: pulse 2s infinite ease-in-out;
+        }
+
+        .coin {
+            width: 200px; /* Размер монеты */
+            height: 200px;
+            background-image: url('https://i.imgur.com/12345.png'); /* Замените на URL вашей монеты */
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.7);
+            transition: transform 0.1s ease;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .stats {
+            margin-top: 30px;
+            font-size: 1.2em;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .stats span {
+            padding: 8px 15px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .energy-bar {
             width: 100%;
-        }
-
-        .mine-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 7px 20px rgba(76, 175, 80, 0.5);
-        }
-
-        .mine-btn:active {
-            transform: scale(0.95);
-        }
-
-        .status {
-            color: #888;
-            font-size: 12px;
-            margin-bottom: 20px;
-        }
-
-        .referral-section {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .referral-title {
-            color: #333;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .referral-link {
-            background: white;
-            border: 2px solid #4CAF50;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.3);
             border-radius: 10px;
-            padding: 10px;
-            font-size: 12px;
-            color: #333;
-            word-break: break-all;
-            margin-bottom: 10px;
-            user-select: all;
+            margin-top: 10px;
+            overflow: hidden;
+            position: relative;
         }
 
-        .copy-btn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+        .energy-fill {
+            height: 100%;
+            background-color: #00aaff;
+            width: 100%;
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .auto-collect {
+            margin-top: 30px;
+            font-size: 1.1em;
+        }
+
+        .auto-collect button {
+            background-color: #00aaff;
             color: white;
             border: none;
             padding: 10px 20px;
-            border-radius: 10px;
+            border-radius: 5px;
             cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: transform 0.2s;
-            width: 100%;
+            font-size: 1em;
+            margin-top: 10px;
+            transition: background-color 0.3s ease;
         }
 
-        .copy-btn:hover {
-            transform: scale(1.02);
+        .auto-collect button:hover {
+            background-color: #0088cc;
         }
 
-        .tg-btn {
-            display: inline-block;
-            background: linear-gradient(135deg, #0088cc, #0077b5);
+        .swipe-indicator {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.5em;
+            opacity: 0.7;
+            z-index: 2;
+        }
+
+        .page-container {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+            width: 200%; /* Два контейнера для свайпа */
+        }
+
+        .page {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .channel-link, .referral-link {
+            margin-top: 20px;
+            padding: 12px 25px;
+            background-color: #00aaff;
             color: white;
             text-decoration: none;
-            padding: 12px 30px;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 16px;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 5px 15px rgba(0, 136, 204, 0.4);
+            border-radius: 8px;
+            font-size: 1.1em;
+            transition: background-color 0.3s ease;
         }
 
-        .tg-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 7px 20px rgba(0, 136, 204, 0.5);
+        .channel-link:hover, .referral-link:hover {
+            background-color: #0088cc;
         }
 
-        .referral-bonus {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            color: white;
-            border-radius: 10px;
-            padding: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 15px;
-        }
-
-        .footer {
-            margin-top: 20px;
-            color: #999;
-            font-size: 12px;
+        .referral-info {
+            margin-top: 15px;
+            font-size: 0.9em;
+            opacity: 0.8;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <img src="rbcoin.png" alt="RB Coin Logo" class="coin-logo" id="coinLogo">
+    <div class="stars"></div>
 
-        <h1>🪙 RB COIN</h1>
-        <p class="tagline">Зарабатывай монеты кликами!</p>
+    <div class="game-container">
+        <div class="page-container">
+            <div class="page">
+                <h1>RB Coin Clicker</h1>
 
-        <div class="counter">
-            <div class="counter-label">Твои монеты:</div>
-            <div id="coinCount">0</div>
+                <div class="coin-container" id="coin">
+                    <div class="coin"></div>
+                </div>
+
+                <div class="stats">
+                    <div>Монеты: <span id="coins">0.00</span></div>
+                    <div>Энергия: <span id="energy">30</span> / 30</div>
+                    <div class="energy-bar">
+                        <div class="energy-fill" id="energy-fill"></div>
+                    </div>
+                </div>
+
+                <div class="auto-collect">
+                    <div>Автосбор: <span id="auto-collect-status">Выключен</span></div>
+                    <button id="toggle-auto-collect">Включить автосбор</button>
+                    <div class="referral-info">
+                        За каждого приглашенного друга вы получите 30 монет!
+                    </div>
+                </div>
+            </div>
+
+            <div class="page">
+                <div class="channel-info">
+                    <h2>Наш Telegram-канал</h2>
+                    <a href="https://t.me/+ciz2RtMWH9MzMzUy" target="_blank" class="channel-link">Перейти в Telegram</a>
+                </div>
+                <div class="referral-section">
+                    <h2>Пригласите друзей</h2>
+                    <p>Ваша реферальная ссылка:</p>
+                    <input type="text" id="referral-link-input" readonly style="width: 80%; padding: 10px; margin-bottom: 10px; text-align: center;">
+                    <button onclick="copyReferralLink()" style="background-color: #00aaff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Копировать ссылку</button>
+                    <div class="referral-info">
+                        Приглашайте друзей и получайте по 30 монет за каждого!
+                    </div>
+                </div>
+            </div>
         </div>
+    </div>
 
-        <button class="mine-btn" onclick="mineCoin()">⛏️ Добыть монету</button>
-        <p class="status" id="status"></p>
-
-        <div class="referral-bonus">
-            🎁 Приглашай друзей и получай <strong>100 монет</strong> за каждого!
-        </div>
-
-        <div class="referral-section">
-            <div class="referral-title">👥 Твоя реферальная ссылка:</div>
-            <div class="referral-link" id="referralLink">https://tyzpopero-svg.github.io/RB-coin/?ref=your_id</div>
-            <button class="copy-btn" onclick="copyReferralLink()">📋 Скопировать ссылку</button>
-        </div>
-
-        <a href="https://t.me/+ciz2RtMWH9MzMzUy" target="_blank" class="tg-btn">
-            📢 Наш Telegram канал
-        </a>
-
-        <p class="footer">© 2026 RB Coin. Все права защищены.</p>
+    <div class="swipe-indicator">
+        ← Свайп влево для перехода на страницу с ссылками
     </div>
 
     <script>
-        // Баланс монет
-        let coins = localStorage.getItem('rb_coins') || 0;
-        coins = parseInt(coins);
-        document.getElementById('coinCount').textContent = coins;
+        const coinsElement = document.getElementById('coins');
+        const energyElement = document.getElementById('energy');
+        const energyFillElement = document.getElementById('energy-fill');
+        const coinElement = document.getElementById('coin');
+        const toggleAutoCollectButton = document.getElementById('toggle-auto-collect');
+        const autoCollectStatusElement = document.getElementById('auto-collect-status');
+        const referralLinkInput = document.getElementById('referral-link-input');
+        const pageContainer = document.querySelector('.page-container');
 
-        // Проверка реферальной ссылки
-        const urlParams = new URLSearchParams(window.location.search);
-        const ref = urlParams.get('ref');
+        let coins = 0.00;
+        let energy = 30;
+        const maxEnergy = 30;
+        const energyRechargeRate = 0.5; // Единиц энергии в секунду
+        const coinsPerTap = 0.01;
+        const autoCollectCost = 500; // Стоимость включения автосбора
+        const autoCollectRate = 0.02; // Монет в минуту
+        let isAutoCollecting = false;
+        let autoCollectInterval = null;
+        let lastTapTime = 0;
+        const tapCooldown = 100; // Миллисекунды задержки между тапами для анимации
+        const referralReward = 30;
+        const baseReferralLink = "https://your-game-domain.com/?ref="; // Замените на реальную ссылку вашего приложения
 
-        if (ref && !localStorage.getItem('rb_ref_' + ref)) {
-            // Добавляем 100 монет за реферала
-            coins += 100;
-            localStorage.setItem('rb_coins', coins);
-            localStorage.setItem('rb_ref_' + ref, 'true');
-            document.getElementById('coinCount').textContent = coins;
-            alert('🎉 Ты получил 100 монет за переход по реферальной ссылке!');
+        // Генерация звезд для фона
+        const starsContainer = document.querySelector('.stars');
+        const numberOfStars = 150;
+        for (let i = 0; i < numberOfStars; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.top = `${Math.random() * 100}vh`;
+            star.style.left = `${Math.random() * 100}vw`;
+            star.style.width = `${Math.random() * 3}px`;
+            star.style.height = `${Math.random() * 3}px`;
+            star.style.animationDelay = `${Math.random() * 3}s`;
+            star.style.animationDuration = `${3 + Math.random() * 2}s`; // Разная длительность анимации
+            starsContainer.appendChild(star);
         }
 
-        // Функция добычи монет
-        let mining = false;
-        let clickCount = 0;
-        let lastClickTime = 0;
+        // Функция для обновления отображения монет
+        function updateCoinsDisplay() {
+            coinsElement.textContent = coins.toFixed(2);
+        }
 
-        function mineCoin() {
-            const now = Date.now();
-            const timeDiff = now - lastClickTime;
+        // Функция для обновления отображения энергии
+        function updateEnergyDisplay() {
+            energyElement.textContent = energy;
+            const energyPercentage = (energy / maxEnergy) * 100;
+            energyFillElement.style.width = `${energyPercentage}%`;
+        }
 
-            // Минимальное время между кликами - 2 секунды
-            if (timeDiff < 2000) {
-                document.getElementById('status').textContent = '⏳ Подожди 2 секунды перед следующим кликом!';
-                return;
+        // Функция для получения уникальной реферальной ссылки
+        function generateReferralLink() {
+            // Здесь можно генерировать уникальный ID пользователя или использовать его ID из базы данных
+            const userId = `user_${Date.now()}`; // Пример генерации ID
+            return `${baseReferralLink}${userId}`;
+        }
+
+        // Инициализация отображения
+        updateCoinsDisplay();
+        updateEnergyDisplay();
+        referralLinkInput.value = generateReferralLink();
+
+        // Функция нажатия на монету
+        coinElement.addEventListener('click', () => {
+            const currentTime = Date.now();
+            if (currentTime - lastTapTime < tapCooldown) {
+                return; // Игнорируем слишком частые клики
             }
+            lastTapTime = currentTime;
 
-            lastClickTime = now;
+            if (energy >= 1) {
+                energy--;
+                coins += coinsPerTap;
+                updateEnergyDisplay();
+                updateCoinsDisplay();
 
-            // Увеличиваем счётчик кликов
-            clickCount++;
+                // Анимация нажатия на монету
+                coinElement.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    coinElement.style.transform = 'scale(1)';
+                }, 100);
 
-            // Каждый 3-й клик даёт монету
-            if (clickCount % 3 === 0) {
-                coins += 1;
-                localStorage.setItem('rb_coins', coins);
-                document.getElementById('coinCount').textContent = coins;
-                document.getElementById('status').textContent = '✅ +1 монета!';
             } else {
-                document.getElementById('status').textContent = `⏳ Ещё ${3 - (clickCount % 3)} клика до монеты...`;
+                // Можно добавить уведомление о недостатке энергии
+                console.log("Недостаточно энергии!");
             }
+        });
 
-            // Анимация кнопки
-            const btn = document.querySelector('.mine-btn');
-            btn.style.transform = 'scale(0.9)';
-            setTimeout(() => {
-                btn.style.transform = 'scale(1)';
-            }, 100);
-        }
+        // Функция восстановления энергии
+        setInterval(() => {
+            if (energy < maxEnergy) {
+                energy += energyRechargeRate;
+                if (energy > maxEnergy) {
+                    energy = maxEnergy;
+                }
+                updateEnergyDisplay();
+            }
+        }, 1000); // Восстановление каждую секунду
 
-        // Обновляем реферальную ссылку
-        const userId = localStorage.getItem('rb_user_id') || Math.random().toString(36).substr(2, 9);
-        localStorage.setItem('rb_user_id', userId);
-        document.getElementById('referralLink').textContent = 
-            `https://tyzpopero-svg.github.io/RB-coin/?ref=${userId}`;
+        // Функция автосбора
+        toggleAutoCollectButton.addEventListener('click', () => {
+            if (!isAutoCollecting) {
+                if (coins >= autoCollectCost) {
+                    coins -= autoCollectCost;
+                    isAutoCollecting = true;
+                    autoCollectStatusElement.textContent = 'Включен';
+                    toggleAutoCollectButton.textContent = 'Отключить автосбор';
+                    updateCoinsDisplay();
 
-        // Копирование реферальной ссылки
+                    autoCollectInterval = setInterval(() => {
+                        coins += autoCollectRate / 60; // Добавляем монеты каждую секунду
+                        updateCoinsDisplay();
+                    }, 1000); // Обновление каждую секунду
+
+                } else {
+                    alert(`Недостаточно монет для включения автосбора. Требуется ${autoCollectCost} монет.`);
+                }
+            } else {
+                isAutoCollecting = false;
+                autoCollectStatusElement.textContent = 'Выключен';
+                toggleAutoCollectButton.textContent = 'Включить автосбор';
+                clearInterval(autoCollectInterval);
+            }
+        });
+
+        // Функция копирования реферальной ссылки
         function copyReferralLink() {
-            const link = document.getElementById('referralLink').textContent;
+            const link = referralLinkInput.value;
             navigator.clipboard.writeText(link).then(() => {
-                alert('✅ Ссылка скопирована! Отправь её друзьям и получай монеты!');
-            }).catch(() => {
-                // Fallback
-                const textarea = document.createElement('textarea');
-                textarea.value = link;
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-                alert('✅ Ссылка скопирована!');
+                alert('Реферальная ссылка скопирована!');
+            }).catch(err => {
+                console.error('Ошибка копирования ссылки: ', err);
+                alert('Не удалось скопировать ссылку. Попробуйте вручную.');
             });
         }
 
-        // Функция для обновления монет на странице
-        function updateCoins() {
-            document.getElementById('coinCount').textContent = coins;
-        }
+        // Обработка свайпа для перехода между страницами
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let currentPage = 0; // 0 - основная страница, 1 - страница ссылок
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            touchEndX = e.touches[0].clientX;
+            const diff = touchEndX - touchStartX;
+            if (Math.abs(diff) > 50) { // Минимальное расстояние для свайпа
+                if (diff < 0 && currentPage === 0) { // Свайп влево
+                    pageContainer.style.transform = `translateX(-50%)`;
+                    currentPage = 1;
+                    document.querySelector('.swipe-indicator').textContent = '→ Свайп вправо для возврата';
+                } else if (diff > 0 && currentPage === 1) { // Свайп вправо
+                    pageContainer.style.transform = `translateX(0%)`;
+                    currentPage = 0;
+                    document.querySelector('.swipe-indicator').textContent = '← Свайп влево для перехода на страницу с ссылками';
+                }
+                touchStartX = 0; // Сброс для предотвращения множественных срабатываний
+                touchEndX = 0;
+            }
+        });
+
+        document.addEventListener('touchend', () => {
+            touchStartX = 0;
+            touchEndX = 0;
+        });
+
+        // Обработка свайпа для мыши (для десктопа)
+        let mouseStartX = 0;
+        let mouseEndX = 0;
+        let isDragging = false;
+
+        document.addEventListener('mousedown', (e) => {
+            if (e.clientX < window.innerWidth * 0.8) { // Игнорируем клики на сайдбарах, если они есть
+                isDragging = true;
+                mouseStartX = e.clientX;
+            }
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            mouseEndX = e.clientX;
+            const diff = mouseEndX - mouseStartX;
+            if (Math.abs(diff) > 50) { // Минимальное расстояние для свайпа
+                if (diff < 0 && currentPage === 0) { // Свайп влево
+                    pageContainer.style.transform = `translateX(-50%)`;
+                    currentPage = 1;
+                    document.querySelector('.swipe-indicator').textContent = '→ Свайп вправо для возврата';
+                } else if (diff > 0 && currentPage === 1) { // Свайп вправо
+                    pageContainer.style.transform = `translateX(0%)`;
+                    currentPage = 0;
+                    document.querySelector('.swipe-indicator').textContent = '← Свайп влево для перехода на страницу с ссылками';
+                }
+                isDragging = false; // Сброс для предотвращения множественных срабатываний
+                mouseStartX = 0;
+                mouseEndX = 0;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            mouseStartX = 0;
+            mouseEndX = 0;
+        });
+
     </script>
 </body>
 </html>
