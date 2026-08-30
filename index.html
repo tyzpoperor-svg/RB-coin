@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RB Coin Tap</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: #0a0a10; /* Ещё темнее фон */
+            color: #fff; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Другой шрифт */
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+            min-height: 100vh;
+            padding-bottom: 20px; /* Небольшой отступ снизу */
+        }
+        .header { 
+            width: 100%; 
+            background: #1a1a2e; 
+            padding: 12px 0; 
+            text-align: center;
+            border-bottom: 2px solid #ffc107; /* Золотистая рамка */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        .coins { font-size: 26px; font-weight: bold; color: #ffc107; letter-spacing: 0.5px; }
+        .energy { color: #00bcd4; margin-top: 4px; font-size: 13px; }
+        .tap-area { 
+            width: 250px; /* Чуть больше область */
+            height: 250px; 
+            background-image: url('rbcoin.png'); /* <<< --- ТВОЯ КАРТИНКА RB COIN ЗДЕСЬ! */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            border-radius: 50%; /* Всё равно делаем круглым */
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            margin: 30px auto;
+            user-select: none;
+            transition: transform 0.1s ease-out;
+            cursor: pointer;
+            position: relative; /* Для анимации */
+            border: 4px solid #ffc107; /* Золотая обводка */
+            box-shadow: 0 0 20px rgba(255,193,7,0.6);
+        }
+        .tap-area:active { transform: scale(0.93); box-shadow: 0 0 10px rgba(255,193,7,0.8); }
+        .tap-area.disabled { 
+            background-image: url('rbcoin.png'); /* Картинка остаётся */
+            opacity: 0.6; /* Но становится бледной */
+            cursor: not-allowed; 
+            border-color: #6c757d; /* Серый цвет */
+            box-shadow: none;
+        }
+        .upgrades { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+            margin: 15px 20px;
+            width: 95%;
+            max-width: 380px;
+        }
+        .upgrade-btn { 
+            background: #2c2c3e; /* Более тёмный фон */
+            padding: 15px; 
+            border-radius: 12px; /* Скруглённые углы */
+            cursor: pointer;
+            border: 1px solid #4a4a60;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        }
+        .upgrade-btn:hover { background: #3a3a50; }
+        .upgrade-btn:active { transform: translateY(1px); }
+        .upgrade-btn.disabled { opacity: 0.5; cursor: not-allowed; }
+        .upgrade-btn .cost { color: #ffc107; font-weight: bold; font-size: 15px; }
+        .upgrade-btn .desc { font-size: 13px; color: #bbb; }
+        .upgrade-btn .level { font-size: 13px; color: #888; margin-left: 5px; }
+        .profit-info { 
+            margin: 15px 0; 
+            color: #28a745; /* Зелёный для профита */
+            font-size: 13px; 
+            background: #1e2a1e; /* Тёмно-зелёный фон */
+            padding: 10px 15px; 
+            border-radius: 10px;
+            width: 95%;
+            max-width: 380px;
+            text-align: center;
+            border: 1px dashed #28a745;
+        }
+        #resetBtn { 
+            margin-top: 20px; 
+            padding: 10px 25px; 
+            background: #dc3545; /* Красная кнопка */
+            border: none; 
+            color: #fff; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            font-size: 14px;
+            transition: background 0.2s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        }
+        #resetBtn:hover { background: #c82333; }
+        #resetBtn:active { transform: translateY(1px); }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="coins">🪙 RB Coins: <span id="coinCount">0.0</span></div>
+    <div class="energy">⚡ Энергия: <span id="energy">30</span>/30</div>
+</div>
+
+<!-- Вместо круга - изображение RB Coin -->
+<div class="tap-area" id="tapArea"></div>
+
+<div class="profit-info">⚡ Авто-доход: <span id="autoIncome">0.00</span>/сек</div>
+
+<div class="upgrades">
+    <!-- Улучшение тапа -->
+    <div class="upgrade-btn" id="upTap" onclick="upgradeTap()">
+        <div>
+            <span class="desc">👆 Тап +0.05</span>
+            <span class="level">Ур. <span id="tapLevel">1</span></span>
+        </div>
+        <div class="cost">💰 <span id="tapCost">500</span></div>
+    </div>
+
+    <!-- Улучшение энергии -->
+    <div class="upgrade-btn" id="upEnergy" onclick="upgradeEnergy()">
+        <div>
+            <span class="desc">⚡ Макс энергия +3</span>
+            <span class="level">Ур. <span id="energyLevel">1</span></span>
+        </div>
+        <div class="cost">💰 <span id="energyCost">800</span></div>
+    </div>
+
+    <!-- Улучшение авто-дохода -->
+    <div class="upgrade-btn" id="upAuto" onclick="upgradeAuto()">
+        <div>
+            <span class="desc">🤖 Авто-доход +0.005/сек</span>
+            <span class="level">Ур. <span id="autoLevel">0</span></span>
+        </div>
+        <div class="cost">💰 <span id="autoCost">1500</span></div>
+    </div>
+</div>
+
+<button id="resetBtn">🔄 Сбросить прогресс</button>
+
+<script>
+    let coins = 0;
+    let energy = 30; // Ещё меньше энергии
+    let maxEnergy = 30;
+    let tapPower = 0.05; // Совсем мало за тап
+    let autoIncome = 0; 
+    let tapLevel = 1;
+    let energyLevel = 1;
+    let autoLevel = 0;
+
+    // Стоимость улучшений
+    let tapCost = 500; // Начинаем с 500!
+    let energyCost = 800;
+    let autoCost = 1500;
+
+    const saveGame = () => {
+        localStorage.setItem('rbCoinData', JSON.stringify({
+            coins, energy, maxEnergy, tapPower, autoIncome,
+            tapLevel, energyLevel, autoLevel,
+            tapCost, energyCost, autoCost
+        }));
+    };
+
+    const loadGame = () => {
+        const data = JSON.parse(localStorage.getItem('rbCoinData'));
+        if (data) {
+            coins = data.coins;
+            energy = data.energy;
+            maxEnergy = data.maxEnergy;
+            tapPower = data.tapPower;
+            autoIncome = data.autoIncome;
+            tapLevel = data.tapLevel;
+            energyLevel = data.energyLevel;
+            autoLevel = data.autoLevel;
+            tapCost = data.tapCost;
+            energyCost = data.energyCost;
+            autoCost = data.autoCost;
+        }
+    };
+
+    loadGame();
+
+    const coinDisplay = document.getElementById('coinCount');
+    const energyDisplay = document.getElementById('energy');
+    const tapArea = document.getElementById('tapArea'); // Изменили ID
+    const autoIncomeDisplay = document.getElementById('autoIncome');
+    const tapLevelDisplay = document.getElementById('tapLevel');
+    const energyLevelDisplay = document.getElementById('energyLevel');
+    const autoLevelDisplay = document.getElementById('autoLevel');
+    const tapCostDisplay = document.getElementById('tapCost');
+    const energyCostDisplay = document.getElementById('energyCost');
+    const autoCostDisplay = document.getElementById('autoCost');
+
+    function updateUI() {
+        coinDisplay.textContent = coins.toFixed(1);
+        energyDisplay.textContent = Math.floor(energy) + '/' + maxEnergy;
+        autoIncomeDisplay.textContent = autoIncome.toFixed(3); // Точность для авто-дохода
+        tapLevelDisplay.textContent = tapLevel;
+        energyLevelDisplay.textContent = energyLevel;
+        autoLevelDisplay.textContent = autoLevel;
+        tapCostDisplay.textContent = Math.floor(tapCost);
+        energyCostDisplay.textContent = Math.floor(energyCost);
+        autoCostDisplay.textContent = Math.floor(autoCost);
+
+        // Обновляем внешний вид тапалки
+        tapArea.classList.toggle('disabled', energy <= 0);
+    }
+
+    // ТАП по RB Coin
+    tapArea.addEventListener('click', () => {
+        if (energy > 0) {
+            coins += tapPower;
+            energy -= 1; // Тратим 1 энергию за тап
+            updateUI();
+            saveGame();
+        }
+    });
+
+    // Восстановление энергии ОЧЕНЬ медленное (0.1/сек)
+    setInterval(() => {
+        if (energy < maxEnergy) {
+            energy += 0.1; // Очень медленно
+            if (energy > maxEnergy) energy = maxEnergy;
+            updateUI();
+        }
+    }, 1000); // Каждую секунду
+
+    // Авто-доход
+    setInterval(() => {
+        if (autoIncome > 0) {
+            coins += autoIncome;
+            updateUI();
+            saveGame();
+        }
+    }, 1000);
+
+    // Улучшение тапа
+    function upgradeTap() {
+        if (coins >= tapCost) {
+            coins -= tapCost;
+            tapPower += 0.05; // Увеличиваем совсем чуть-чуть
+            tapLevel++;
+            tapCost = Math.floor(tapCost * 1.6); // Цена растёт быстрее
+            updateUI();
+            saveGame();
+        }
+    }
+
+    // Улучшение энергии
+    function upgradeEnergy() {
+        if (coins >= energyCost) {
+            coins -= energyCost;
+            maxEnergy += 3; // Увеличиваем энергию совсем чуть-чуть
+            energyLevel++;
+            energyCost = Math.floor(energyCost * 1.6);
+            updateUI();
+            saveGame();
+        }
+    }
+
+    // Улучшение авто-дохода
+    function upgradeAuto() {
+        if (coins >= autoCost) {
+            coins -= autoCost;
+            autoIncome += 0.005; // Доход растёт медленнее
+            autoLevel++;
+            autoCost = Math.floor(autoCost * 2.2); // Цена растёт ещё быстрее
+            updateUI();
+            saveGame();
+        }
+    }
+
+    // Сброс
+    document.getElementById('resetBtn').onclick = () => {
+        if (confirm('Вы уверены? Весь прогресс будет потерян!')) {
+            localStorage.removeItem('rbCoinData');
+            location.reload();
+        }
+    };
+
+    // Автосохранение каждые 15 секунд
+    setInterval(saveGame, 15000);
+
+    updateUI();
+</script>
+
+</body>
+</html>
