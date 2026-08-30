@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Форма обратной связи</title>
+    <title>🎮 RB Coin Official - Игра</title>
     <style>
         * {
             margin: 0;
@@ -12,81 +12,180 @@
         }
 
         body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            color: white;
+        }
+
+        /* Шапка игры */
+        .header {
+            background: linear-gradient(135deg, #e94560 0%, #c23152 100%);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(233, 69, 96, 0.3);
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            margin-top: 8px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* Основной контейнер */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
             padding: 20px;
         }
 
-        .container {
-            background: white;
-            border-radius: 15px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            max-width: 500px;
-            width: 100%;
+        /* Секция игры */
+        .game-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        h2 {
-            text-align: center;
+        /* Баланс */
+        .balance-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            border-radius: 15px;
+            padding: 20px 25px;
+            margin-bottom: 20px;
+        }
+
+        .balance-label {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .balance-amount {
+            font-size: 36px;
+            font-weight: 800;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Кнопки игры */
+        .game-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .game-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .game-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .game-button:active {
+            transform: translateY(0);
+        }
+
+        /* Форма обратной связи */
+        .contact-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
             color: #333;
-            margin-bottom: 30px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .contact-section h2 {
+            text-align: center;
             font-size: 28px;
+            margin-bottom: 10px;
+            color: #1a1a2e;
+        }
+
+        .contact-section .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 25px;
+            font-size: 14px;
         }
 
         .form-group {
             margin-bottom: 20px;
         }
 
-        label {
+        .form-group label {
             display: block;
             margin-bottom: 8px;
-            color: #555;
+            color: #1a1a2e;
             font-weight: 600;
             font-size: 14px;
         }
 
-        input, textarea {
+        .form-group input,
+        .form-group textarea {
             width: 100%;
             padding: 12px 15px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
             font-size: 16px;
             transition: border-color 0.3s;
+            color: #333;
         }
 
-        input:focus, textarea:focus {
+        .form-group input:focus,
+        .form-group textarea:focus {
             outline: none;
             border-color: #667eea;
         }
 
-        textarea {
+        .form-group textarea {
             min-height: 120px;
             resize: vertical;
         }
 
-        button {
+        .submit-button {
             width: 100%;
             padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #e94560 0%, #c23152 100%);
             color: white;
             border: none;
             border-radius: 8px;
             font-size: 18px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.3s, box-shadow 0.3s;
+            transition: all 0.3s;
         }
 
-        button:hover {
+        .submit-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 10px 20px rgba(233, 69, 96, 0.4);
         }
 
-        button:disabled {
+        .submit-button:disabled {
             opacity: 0.7;
             cursor: not-allowed;
             transform: none;
@@ -121,39 +220,186 @@
             border: 1px solid #bee5eb;
             display: block;
         }
+
+        /* Статистика */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: #e94560;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #aaa;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .balance-amount {
+                font-size: 28px;
+            }
+
+            .contact-section {
+                padding: 20px;
+            }
+        }
     </style>
 </head>
 <body>
+    <div class="header">
+        <h1>🎮 RB Coin Official</h1>
+        <p>Зарабатывай монеты и обменивай их на реальные призы!</p>
+    </div>
+
     <div class="container">
-        <h2>📩 Свяжитесь с нами</h2>
-
-        <form id="contactForm">
-            <div class="form-group">
-                <label for="name">Ваше имя</label>
-                <input type="text" id="name" placeholder="Иван Иванов" required>
+        <!-- Игровая секция -->
+        <div class="game-section">
+            <!-- Баланс -->
+            <div class="balance-card">
+                <span class="balance-label">💰 Баланс:</span>
+                <span class="balance-amount" id="balance">0 RB</span>
             </div>
 
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" placeholder="example@mail.com" required>
+            <!-- Статистика -->
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="clicks">0</div>
+                    <div class="stat-label">Кликов</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="level">1</div>
+                    <div class="stat-label">Уровень</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="profit">0 RB/час</div>
+                    <div class="stat-label">Доход</div>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label for="message">Сообщение</label>
-                <textarea id="message" placeholder="Введите ваше сообщение..." required></textarea>
+            <!-- Кнопки игры -->
+            <div class="game-buttons">
+                <button class="game-button" onclick="clickGame()">🖱️ Кликать!</button>
+                <button class="game-button" onclick="upgradeLevel()">⬆️ Улучшить</button>
+                <button class="game-button" onclick="earnBonus()">🎁 Бонус</button>
             </div>
+        </div>
 
-            <button type="submit" id="submitBtn">Отправить</button>
+        <!-- Форма обратной связи -->
+        <div class="contact-section">
+            <h2>📩 Связаться с нами</h2>
+            <p class="subtitle">Есть вопрос или предложение? Напишите нам!</p>
 
-            <div id="statusMessage" class="status-message"></div>
-        </form>
+            <form id="contactForm">
+                <div class="form-group">
+                    <label for="name">Ваше имя</label>
+                    <input type="text" id="name" placeholder="Введите ваше имя" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="example@mail.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="message">Сообщение</label>
+                    <textarea id="message" placeholder="Введите ваше сообщение..." required></textarea>
+                </div>
+
+                <button type="submit" class="submit-button" id="submitBtn">
+                    📤 Отправить сообщение
+                </button>
+
+                <div id="statusMessage" class="status-message"></div>
+            </form>
+        </div>
     </div>
 
     <script>
-        // Здесь вставляем ваши данные
+        // ============ НАСТРОЙКИ TELEGRAM ============
+        // ВАШ ТОКЕН БОТА (из BotFather)
         const TELEGRAM_BOT_TOKEN = '8709677811:AAFVjpk9CPHrORBnMjzoO5Vte24XDAa6L8w';
+
+        // ВАШ ЛИЧНЫЙ ID (из @userinfobot)
         const TELEGRAM_CHAT_ID = '5612357520';
 
+        // ============ ИГРОВАЯ МЕХАНИКА ============
+        let balance = 0;
+        let clickCount = 0;
+        let level = 1;
+        let profitPerClick = 1;
+
+        function clickGame() {
+            balance += profitPerClick;
+            clickCount++;
+            updateUI();
+            animateClick();
+        }
+
+        function upgradeLevel() {
+            const cost = level * 100;
+            if (balance >= cost) {
+                balance -= cost;
+                level++;
+                profitPerClick = Math.floor(level * 1.5);
+                updateUI();
+                showStatus(`⬆️ Уровень повышен до ${level}!`, 'success');
+            } else {
+                showStatus(`❌ Нужно ${cost} RB для улучшения!`, 'error');
+            }
+        }
+
+        function earnBonus() {
+            const bonus = Math.floor(Math.random() * 50) + 10;
+            balance += bonus;
+            updateUI();
+            showStatus(`🎁 Бонус: +${bonus} RB!`, 'success');
+        }
+
+        function updateUI() {
+            document.getElementById('balance').textContent = `${balance} RB`;
+            document.getElementById('clicks').textContent = clickCount;
+            document.getElementById('level').textContent = level;
+            document.getElementById('profit').textContent = `${profitPerClick} RB/час`;
+        }
+
+        function animateClick() {
+            // Простая анимация клика
+            const button = document.querySelector('.game-button');
+            button.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                button.style.transform = 'scale(1)';
+            }, 100);
+        }
+
+        function showStatus(message, type) {
+            const status = document.getElementById('statusMessage');
+            status.textContent = message;
+            status.className = 'status-message ' + type;
+            setTimeout(() => {
+                status.className = 'status-message';
+            }, 3000);
+        }
+
+        // ============ ФОРМА ОБРАТНОЙ СВЯЗИ ============
         const form = document.getElementById('contactForm');
         const submitBtn = document.getElementById('submitBtn');
         const statusMessage = document.getElementById('statusMessage');
@@ -167,24 +413,28 @@
 
             // Проверка заполнения
             if (!name || !email || !message) {
-                showMessage('Пожалуйста, заполните все поля', 'error');
+                showStatus('Пожалуйста, заполните все поля', 'error');
                 return;
             }
 
             // Проверка email
             if (!email.includes('@')) {
-                showMessage('Пожалуйста, введите корректный email', 'error');
+                showStatus('Пожалуйста, введите корректный email', 'error');
                 return;
             }
 
             // Блокируем кнопку
             submitBtn.disabled = true;
-            showMessage('Отправка...', 'loading');
+            showStatus('⏳ Отправка...', 'loading');
 
             // Формируем текст сообщения
-            const text = `📋 Новая заявка!\n\n` +
+            const text = `🎮 Новая заявка из игры!\n\n` +
                         `👤 Имя: ${name}\n` +
                         `📧 Email: ${email}\n` +
+                        `📊 Статистика:\n` +
+                        `- Баланс: ${balance} RB\n` +
+                        `- Уровень: ${level}\n` +
+                        `- Кликов: ${clickCount}\n\n` +
                         `💬 Сообщение:\n${message}`;
 
             try {
@@ -201,22 +451,17 @@
                 });
 
                 if (response.ok) {
-                    showMessage('✅ Сообщение отправлено! Мы свяжемся с вами.', 'success');
+                    showStatus('✅ Сообщение отправлено! Мы свяжемся с вами.', 'success');
                     form.reset();
                 } else {
                     throw new Error('Ошибка отправки');
                 }
             } catch (error) {
-                showMessage('❌ Ошибка отправки. Попробуйте ещё раз.', 'error');
+                showStatus('❌ Ошибка отправки. Попробуйте ещё раз.', 'error');
             } finally {
                 submitBtn.disabled = false;
             }
         });
-
-        function showMessage(text, type) {
-            statusMessage.textContent = text;
-            statusMessage.className = 'status-message ' + type;
-        }
     </script>
 </body>
 </html>
