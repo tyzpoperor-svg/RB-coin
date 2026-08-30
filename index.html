@@ -13,455 +13,505 @@
 
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            background: linear-gradient(135deg, #0a0a0a 0%, #000000 50%, #1a1a2e 100%);
             min-height: 100vh;
             color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
         }
 
-        /* Шапка игры */
-        .header {
-            background: linear-gradient(135deg, #e94560 0%, #c23152 100%);
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 4px 20px rgba(233, 69, 96, 0.3);
+        /* Звёздный фон */
+        .stars-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
         }
 
-        .header h1 {
-            font-size: 32px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            animation: fall linear infinite;
+            opacity: 0.8;
         }
 
-        .header p {
-            margin-top: 8px;
-            font-size: 14px;
-            opacity: 0.9;
+        .star:nth-child(even) {
+            width: 3px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.8);
         }
 
-        /* Основной контейнер */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
+        .star:nth-child(3n) {
+            width: 1px;
+            height: 1px;
         }
 
-        /* Секция игры */
-        .game-section {
+        @keyframes fall {
+            from {
+                transform: translateY(-100px) translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(calc(100vh + 100px)) translateX(50px);
+                opacity: 0;
+            }
+        }
+
+        /* Огонёк */
+        .fire-sticker {
+            position: fixed;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #ff6b35, #ff4500);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 30px;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(255, 69, 0, 0.8);
+            z-index: 100;
+            animation: firePulse 2s ease-in-out infinite;
+            transition: transform 0.3s;
+        }
+
+        .fire-sticker:hover {
+            transform: scale(1.2);
+        }
+
+        @keyframes firePulse {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(255, 69, 0, 0.8);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(255, 69, 0, 1);
+            }
+        }
+
+        /* Буст эффект */
+        .boost-active {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #ff6b35, #ff4500);
+            padding: 10px 20px;
+            border-radius: 10px;
+            z-index: 200;
+            font-weight: bold;
+            box-shadow: 0 4px 20px rgba(255, 69, 0, 0.5);
+            animation: boostPulse 1s ease-in-out infinite;
+            display: none;
+        }
+
+        .boost-active.show {
+            display: block;
+        }
+
+        @keyframes boostPulse {
+            0%, 100% {
+                transform: translateX(-50%) scale(1);
+            }
+            50% {
+                transform: translateX(-50%) scale(1.1);
+            }
+        }
+
+        .game-container {
             background: rgba(255, 255, 255, 0.1);
             border-radius: 20px;
             padding: 30px;
-            margin-bottom: 30px;
+            width: 100%;
+            max-width: 500px;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 10;
         }
 
-        /* Баланс */
-        .balance-card {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        .game-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .game-header h1 {
+            font-size: 36px;
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .balance-display {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
             border-radius: 15px;
-            padding: 20px 25px;
-            margin-bottom: 20px;
+            border: 2px solid rgba(243, 156, 18, 0.3);
         }
 
         .balance-label {
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 14px;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
         .balance-amount {
-            font-size: 36px;
+            font-size: 48px;
             font-weight: 800;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            color: #f39c12;
+            margin-top: 5px;
         }
 
-        /* Кнопки игры */
-        .game-buttons {
+        .balance-amount span {
+            font-size: 20px;
+            color: #e67e22;
+        }
+
+        .click-button {
+            width: 100%;
+            padding: 25px;
+            font-size: 24px;
+            font-weight: 700;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #e94560, #c23152);
+            color: white;
+            transition: all 0.3s;
+            margin: 20px 0;
+            box-shadow: 0 5px 20px rgba(233, 69, 96, 0.4);
+        }
+
+        .click-button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 30px rgba(233, 69, 96, 0.6);
+        }
+
+        .click-button:active {
+            transform: scale(0.95);
+        }
+
+        .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 20px 0;
         }
 
-        .game-button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            color: white;
-            padding: 20px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        .game-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-        }
-
-        .game-button:active {
-            transform: translateY(0);
-        }
-
-        /* Форма обратной связи */
-        .contact-section {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 30px;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .contact-section h2 {
-            text-align: center;
-            font-size: 28px;
-            margin-bottom: 10px;
-            color: #1a1a2e;
-        }
-
-        .contact-section .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 25px;
-            font-size: 14px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #1a1a2e;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-            color: #333;
-        }
-
-        .form-group input:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .form-group textarea {
-            min-height: 120px;
-            resize: vertical;
-        }
-
-        .submit-button {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #e94560 0%, #c23152 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .submit-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(233, 69, 96, 0.4);
-        }
-
-        .submit-button:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .status-message {
-            margin-top: 15px;
+        .stat-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
             padding: 10px;
-            border-radius: 8px;
             text-align: center;
-            display: none;
-            font-weight: 500;
-        }
-
-        .status-message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-            display: block;
-        }
-
-        .status-message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-            display: block;
-        }
-
-        .status-message.loading {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-            display: block;
-        }
-
-        /* Статистика */
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 15px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .stat-value {
-            font-size: 28px;
-            font-weight: 800;
-            color: #e94560;
+            font-size: 22px;
+            font-weight: 700;
+            color: #667eea;
         }
 
         .stat-label {
-            font-size: 14px;
+            font-size: 10px;
             color: #aaa;
             margin-top: 5px;
         }
 
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 24px;
+        .upgrade-button {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .upgrade-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .message {
+            text-align: center;
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            display: none;
+            font-size: 14px;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message.success {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+
+        .message.error {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+            border: 1px solid rgba(244, 67, 54, 0.3);
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                margin: 20px;
+                padding: 20px;
             }
 
             .balance-amount {
-                font-size: 28px;
+                font-size: 36px;
             }
 
-            .contact-section {
-                padding: 20px;
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .stat-value {
+                font-size: 20px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>🎮 RB Coin Official</h1>
-        <p>Зарабатывай монеты и обменивай их на реальные призы!</p>
+    <!-- Звёздный фон -->
+    <div class="stars-container" id="starsContainer"></div>
+
+    <!-- Индикатор буста -->
+    <div class="boost-active" id="boostIndicator">
+        🔥 БУСТ x2 АКТИВЕН! Осталось: <span id="boostTime">04:00</span>
     </div>
 
-    <div class="container">
-        <!-- Игровая секция -->
-        <div class="game-section">
-            <!-- Баланс -->
-            <div class="balance-card">
-                <span class="balance-label">💰 Баланс:</span>
-                <span class="balance-amount" id="balance">0 RB</span>
-            </div>
+    <!-- Игровое поле -->
+    <div class="game-container">
+        <div class="game-header">
+            <h1>🎮 RB COIN</h1>
+        </div>
 
-            <!-- Статистика -->
-            <div class="stats">
-                <div class="stat-card">
-                    <div class="stat-value" id="clicks">0</div>
-                    <div class="stat-label">Кликов</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="level">1</div>
-                    <div class="stat-label">Уровень</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="profit">0 RB/час</div>
-                    <div class="stat-label">Доход</div>
-                </div>
-            </div>
+        <!-- Баланс -->
+        <div class="balance-display">
+            <div class="balance-label">Баланс</div>
+            <div class="balance-amount" id="balance">0 <span>RB</span></div>
+        </div>
 
-            <!-- Кнопки игры -->
-            <div class="game-buttons">
-                <button class="game-button" onclick="clickGame()">🖱️ Кликать!</button>
-                <button class="game-button" onclick="upgradeLevel()">⬆️ Улучшить</button>
-                <button class="game-button" onclick="earnBonus()">🎁 Бонус</button>
+        <!-- Кнопка клика -->
+        <button class="click-button" onclick="clickCoin()">👆 КЛИКАЙ!</button>
+
+        <!-- Статистика -->
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-value" id="clicks">0</div>
+                <div class="stat-label">Клики</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="level">1</div>
+                <div class="stat-label">Уровень</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="perClick">+1</div>
+                <div class="stat-label">За клик</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="nextFire">10:00</div>
+                <div class="stat-label">До огонька</div>
             </div>
         </div>
 
-        <!-- Форма обратной связи -->
-        <div class="contact-section">
-            <h2>📩 Связаться с нами</h2>
-            <p class="subtitle">Есть вопрос или предложение? Напишите нам!</p>
+        <!-- Улучшение -->
+        <button class="upgrade-button" onclick="upgrade()">⬆️ Улучшить (100 RB)</button>
 
-            <form id="contactForm">
-                <div class="form-group">
-                    <label for="name">Ваше имя</label>
-                    <input type="text" id="name" placeholder="Введите ваше имя" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" placeholder="example@mail.com" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="message">Сообщение</label>
-                    <textarea id="message" placeholder="Введите ваше сообщение..." required></textarea>
-                </div>
-
-                <button type="submit" class="submit-button" id="submitBtn">
-                    📤 Отправить сообщение
-                </button>
-
-                <div id="statusMessage" class="status-message"></div>
-            </form>
-        </div>
+        <!-- Сообщения -->
+        <div id="message" class="message"></div>
     </div>
 
     <script>
-        // ============ НАСТРОЙКИ TELEGRAM ============
-        // ВАШ ТОКЕН БОТА (из BotFather)
-        const TELEGRAM_BOT_TOKEN = '8709677811:AAFVjpk9CPHrORBnMjzoO5Vte24XDAa6L8w';
-
-        // ВАШ ЛИЧНЫЙ ID (из @userinfobot)
-        const TELEGRAM_CHAT_ID = '5612357520';
-
-        // ============ ИГРОВАЯ МЕХАНИКА ============
+        // Игровые переменные
         let balance = 0;
-        let clickCount = 0;
+        let clicks = 0;
         let level = 1;
-        let profitPerClick = 1;
+        let perClick = 1;
+        let boostActive = false;
+        let boostTimeLeft = 0;
+        let fireTimer = 600; // 10 минут = 600 секунд
+        let fireVisible = false;
 
-        function clickGame() {
-            balance += profitPerClick;
-            clickCount++;
-            updateUI();
-            animateClick();
+        // Создание звёзд
+        function createStars() {
+            const container = document.getElementById('starsContainer');
+            const starsCount = 100; // Количество звёзд
+
+            for (let i = 0; i < starsCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+
+                // Случайная позиция и скорость
+                const left = Math.random() * 100;
+                const duration = 5 + Math.random() * 10;
+                const delay = Math.random() * 10;
+                const size = 1 + Math.random() * 2;
+
+                star.style.left = left + '%';
+                star.style.animationDuration = duration + 's';
+                star.style.animationDelay = delay + 's';
+                star.style.width = size + 'px';
+                star.style.height = size + 'px';
+
+                container.appendChild(star);
+            }
         }
 
-        function upgradeLevel() {
+        // Создание огонька
+        function spawnFire() {
+            if (fireVisible) return;
+
+            const fire = document.createElement('div');
+            fire.className = 'fire-sticker';
+            fire.textContent = '🔥';
+            fire.id = 'fireSticker';
+
+            // Случайная позиция
+            const x = 20 + Math.random() * 60;
+            const y = 10 + Math.random() * 70;
+            fire.style.left = x + '%';
+            fire.style.top = y + '%';
+
+            // Клик по огоньку
+            fire.onclick = function() {
+                activateBoost();
+                this.remove();
+                fireVisible = false;
+                document.getElementById('nextFire').textContent = '10:00';
+                fireTimer = 600;
+                showMessage('🔥 БУСТ x2 АКТИВИРОВАН!', 'success');
+            };
+
+            document.body.appendChild(fire);
+            fireVisible = true;
+        }
+
+        // Активация буста
+        function activateBoost() {
+            boostActive = true;
+            boostTimeLeft = 240; // 4 минуты = 240 секунд
+            document.getElementById('boostIndicator').classList.add('show');
+            updateBoostDisplay();
+        }
+
+        // Обновление таймера буста
+        function updateBoostDisplay() {
+            const minutes = Math.floor(boostTimeLeft / 60);
+            const seconds = boostTimeLeft % 60;
+            document.getElementById('boostTime').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // Функция клика
+        function clickCoin() {
+            const gain = boostActive ? perClick * 2 : perClick;
+            balance += gain;
+            clicks++;
+            updateUI();
+
+            // Анимация
+            const button = document.querySelector('.click-button');
+            button.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                button.style.transform = 'scale(1)';
+            }, 100);
+
+            // Визуальный эффект при бусте
+            if (boostActive) {
+                button.style.boxShadow = '0 0 30px rgba(255, 69, 0, 0.8)';
+                setTimeout(() => {
+                    button.style.boxShadow = '';
+                }, 200);
+            }
+        }
+
+        // Функция улучшения
+        function upgrade() {
             const cost = level * 100;
             if (balance >= cost) {
                 balance -= cost;
                 level++;
-                profitPerClick = Math.floor(level * 1.5);
+                perClick = level;
                 updateUI();
-                showStatus(`⬆️ Уровень повышен до ${level}!`, 'success');
+                showMessage('✅ Уровень повышен!', 'success');
             } else {
-                showStatus(`❌ Нужно ${cost} RB для улучшения!`, 'error');
+                showMessage(`❌ Нужно ${cost} RB`, 'error');
             }
         }
 
-        function earnBonus() {
-            const bonus = Math.floor(Math.random() * 50) + 10;
-            balance += bonus;
-            updateUI();
-            showStatus(`🎁 Бонус: +${bonus} RB!`, 'success');
-        }
-
+        // Обновление интерфейса
         function updateUI() {
-            document.getElementById('balance').textContent = `${balance} RB`;
-            document.getElementById('clicks').textContent = clickCount;
+            document.getElementById('balance').innerHTML = `${balance} <span>RB</span>`;
+            document.getElementById('clicks').textContent = clicks;
             document.getElementById('level').textContent = level;
-            document.getElementById('profit').textContent = `${profitPerClick} RB/час`;
+            document.getElementById('perClick').textContent = `+${perClick}`;
         }
 
-        function animateClick() {
-            // Простая анимация клика
-            const button = document.querySelector('.game-button');
-            button.style.transform = 'scale(0.95)';
+        // Показ сообщений
+        function showMessage(text, type) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = `message show ${type}`;
             setTimeout(() => {
-                button.style.transform = 'scale(1)';
-            }, 100);
+                msg.className = 'message';
+            }, 2000);
         }
 
-        function showStatus(message, type) {
-            const status = document.getElementById('statusMessage');
-            status.textContent = message;
-            status.className = 'status-message ' + type;
-            setTimeout(() => {
-                status.className = 'status-message';
-            }, 3000);
-        }
+        // Главный таймер
+        setInterval(() => {
+            // Таймер огонька
+            if (!fireVisible && fireTimer > 0) {
+                fireTimer--;
+                const minutes = Math.floor(fireTimer / 60);
+                const seconds = fireTimer % 60;
+                document.getElementById('nextFire').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
-        // ============ ФОРМА ОБРАТНОЙ СВЯЗИ ============
-        const form = document.getElementById('contactForm');
-        const submitBtn = document.getElementById('submitBtn');
-        const statusMessage = document.getElementById('statusMessage');
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
-            const message = document.getElementById('message').value;
-
-            // Проверка заполнения
-            if (!name || !email || !message) {
-                showStatus('Пожалуйста, заполните все поля', 'error');
-                return;
-            }
-
-            // Проверка email
-            if (!email.includes('@')) {
-                showStatus('Пожалуйста, введите корректный email', 'error');
-                return;
-            }
-
-            // Блокируем кнопку
-            submitBtn.disabled = true;
-            showStatus('⏳ Отправка...', 'loading');
-
-            // Формируем текст сообщения
-            const text = `🎮 Новая заявка из игры!\n\n` +
-                        `👤 Имя: ${name}\n` +
-                        `📧 Email: ${email}\n` +
-                        `📊 Статистика:\n` +
-                        `- Баланс: ${balance} RB\n` +
-                        `- Уровень: ${level}\n` +
-                        `- Кликов: ${clickCount}\n\n` +
-                        `💬 Сообщение:\n${message}`;
-
-            try {
-                // Отправляем в Telegram
-                const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        chat_id: TELEGRAM_CHAT_ID,
-                        text: text
-                    })
-                });
-
-                if (response.ok) {
-                    showStatus('✅ Сообщение отправлено! Мы свяжемся с вами.', 'success');
-                    form.reset();
-                } else {
-                    throw new Error('Ошибка отправки');
+                // Спавн огонька через 10 минут
+                if (fireTimer === 0) {
+                    spawnFire();
                 }
-            } catch (error) {
-                showStatus('❌ Ошибка отправки. Попробуйте ещё раз.', 'error');
-            } finally {
-                submitBtn.disabled = false;
             }
-        });
+
+            // Таймер буста
+            if (boostActive && boostTimeLeft > 0) {
+                boostTimeLeft--;
+                updateBoostDisplay();
+
+                if (boostTimeLeft === 0) {
+                    boostActive = false;
+                    document.getElementById('boostIndicator').classList.remove('show');
+                    showMessage('⏰ Буст закончился!', 'error');
+                }
+            }
+        }, 1000);
+
+        // Загрузка игры
+        createStars();
+        updateUI();
     </script>
 </body>
 </html>
