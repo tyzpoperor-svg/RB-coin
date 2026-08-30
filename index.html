@@ -1,286 +1,345 @@
-<script>
-    // Баланс монет
-    let coins = parseFloat(localStorage.getItem('rb_coins')) || 0;
-    coins = parseFloat(coins.toFixed(2));
-
-    // Авто-майнер
-    let hasAutoMiner = localStorage.getItem('rb_auto_miner') === 'true';
-    let autoMinerEarned = parseFloat(localStorage.getItem('rb_auto_miner_earned')) || 0;
-
-    // Буст
-    let boostActive = false;
-    let boostEndTime = parseInt(localStorage.getItem('rb_boost_end')) || 0;
-    if (boostEndTime > Date.now()) {
-        boostActive = true;
-    }
-
-    // Обновление интерфейса
-    function updateUI() {
-        document.getElementById('coinCount').textContent = coins.toFixed(2);
-
-        // Обновляем статус авто-майнера
-        const autoMinerBtn = document.getElementById('autoMinerBtn');
-        const autoMinerStatus = document.getElementById('autoMinerStatus');
-
-        if (hasAutoMiner) {
-            autoMinerBtn.disabled = true;
-            autoMinerBtn.textContent = '✅ Куплено';
-            autoMinerStatus.textContent = '⛏️ Добывает: 0.001 монет/мин';
-        } else {
-            autoMinerBtn.disabled = coins < 1000;
-            autoMinerBtn.textContent = coins < 1000 ? '💰 Нужно 1000 монет' : '⚡ Купить за 1000';
-            autoMinerStatus.textContent = '';
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💰 RB Coin - Майнер</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        // Обновляем статус буста
-        const boostStatus = document.getElementById('boostStatus');
-        if (boostActive) {
-            boostStatus.classList.add('active');
-            updateBoostTimer();
-        } else {
-            boostStatus.classList.remove('active');
-        }
-    }
-
-    // Обновление таймера буста
-    function updateBoostTimer() {
-        const boostTimer = document.getElementById('boostTimer');
-        const remaining = Math.max(0, boostEndTime - Date.now());
-        const seconds = Math.floor(remaining / 1000);
-        const minutes = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        boostTimer.textContent = `Осталось: ${minutes}:${secs.toString().padStart(2, '0')}`;
-
-        if (remaining <= 0) {
-            boostActive = false;
-            localStorage.removeItem('rb_boost_end');
-            document.getElementById('boostStatus').classList.remove('active');
-            document.getElementById('coinValue').textContent = '💰 +0.01 монета за тап';
-        }
-    }
-
-    // Функция добычи монет (тап)
-    function mineCoin(event) {
-        // Определяем награду за тап
-        let reward = 0.01;
-        if (boostActive) {
-            reward = 0.02; // x2 буст
+        body {
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: white;
+            font-family: 'Arial', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
 
-        coins += reward;
-        coins = parseFloat(coins.toFixed(2));
-        localStorage.setItem('rb_coins', coins.toString());
-
-        // Анимация частиц
-        createParticles(event.clientX, event.clientY, `+${reward.toFixed(2)}`);
-
-        // Обновляем UI
-        updateUI();
-
-        // Обновляем статус
-        document.getElementById('status').textContent = boostActive ? '🔥 Буст активен! +0.02 за тап!' : `+${reward.toFixed(2)} монет!`;
-
-        // Перезапускаем таймер (каждые 5 секунд можно тапать)
-        startTimer();
-    }
-
-    // Таймер обратного отсчёта
-    let timerInterval;
-    let timeLeft = 5.0;
-
-    function startTimer() {
-        if (timerInterval) clearInterval(timerInterval);
-        timeLeft = 5.0;
-        updateTimerDisplay();
-
-        timerInterval = setInterval(() => {
-            timeLeft -= 0.1;
-            if (timeLeft <= 0) {
-                clearInterval(timerInterval);
-                timerInterval = null;
-                document.getElementById('timer').textContent = '✅ ГОТОВО!';
-                document.getElementById('timer').classList.add('ready');
-                document.getElementById('status').textContent = 'Тапай! Монета готова!';
-            } else {
-                updateTimerDisplay();
-            }
-        }, 100);
-    }
-
-    function updateTimerDisplay() {
-        document.getElementById('timer').textContent = timeLeft.toFixed(1) + ' сек';
-        document.getElementById('timer').classList.remove('ready');
-    }
-
-    // Создание частиц при тапе
-    function createParticles(x, y, text) {
-        const container = document.getElementById('starsContainer');
-        const particle = document.createElement('div');
-        particle.className = 'particle';
-        particle.textContent = text;
-        particle.style.left = x + 'px';
-        particle.style.top = y + 'px';
-        particle.style.color = '#ffd700';
-        particle.style.fontWeight = 'bold';
-        container.appendChild(particle);
-
-        setTimeout(() => {
-            particle.remove();
-        }, 1000);
-    }
-
-    // Авто-майнер
-    function buyAutoMiner() {
-        if (coins >= 1000 && !hasAutoMiner) {
-            coins -= 1000;
-            coins = parseFloat(coins.toFixed(2));
-            hasAutoMiner = true;
-            localStorage.setItem('rb_coins', coins.toString());
-            localStorage.setItem('rb_auto_miner', 'true');
-
-            // Начинаем автоматическую добычу
-            startAutoMining();
-            updateUI();
-
-            document.getElementById('status').textContent = '🤖 Авто-майнер куплен!';
-            alert('🎉 Поздравляем! Авто-майнер теперь работает за тебя!');
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            z-index: 10;
         }
-    }
 
-    // Автоматическая добыча
-    let autoMinerInterval;
-
-    function startAutoMining() {
-        if (!hasAutoMiner || autoMinerInterval) return;
-
-        // Добываем каждую минуту по 0.001
-        autoMinerInterval = setInterval(() => {
-            if (hasAutoMiner) {
-                let earnings = 0.001;
-                if (boostActive) {
-                    earnings = 0.002; // x2 если буст активен
-                }
-
-                coins += earnings;
-                coins = parseFloat(coins.toFixed(2));
-                localStorage.setItem('rb_coins', coins.toString());
-
-                // Обновляем счётчик заработанного
-                autoMinerEarned += earnings;
-                localStorage.setItem('rb_auto_miner_earned', autoMinerEarned.toString());
-
-                updateUI();
-                document.getElementById('status').textContent = `🤖 Авто-майнер добыл +${earnings.toFixed(3)} монет`;
-            }
-        }, 60000); // Каждые 60 секунд
-    }
-
-    // Проверка и запуск авто-майнера при загрузке
-    if (hasAutoMiner) {
-        startAutoMining();
-    }
-
-    // Система падающих стикеров огонька
-    function spawnFireSticker() {
-        if (!hasAutoMiner) return; // Только если есть авто-майнер
-
-        // Создаём стикер
-        const sticker = document.createElement('div');
-        sticker.className = 'fire-sticker';
-        sticker.textContent = '🔥';
-        sticker.style.left = Math.random() * (window.innerWidth - 100) + 'px';
-        sticker.style.animationDuration = (2 + Math.random() * 2) + 's';
-
-        // Показываем уведомление
-        const notification = document.getElementById('stickerNotification');
-        notification.style.display = 'block';
-        setTimeout(() => {
-            notification.style.display = 'none';
-        }, 3000);
-
-        // Обработчик тапа по стикеру
-        sticker.onclick = function(e) {
-            e.stopPropagation();
-            activateBoost();
-            sticker.remove();
-        };
-
-        document.body.appendChild(sticker);
-
-        // Удаляем стикер через 5 секунд если не тапнули
-        setTimeout(() => {
-            if (sticker.parentNode) {
-                sticker.remove();
-            }
-        }, 5000);
-    }
-
-    // Активация буста x2
-    function activateBoost() {
-        boostActive = true;
-        boostEndTime = Date.now() + 4 * 60 * 1000; // 4 минуты
-        localStorage.setItem('rb_boost_end', boostEndTime.toString());
-
-        // Обновляем интерфейс
-        document.getElementById('boostStatus').classList.add('active');
-        document.getElementById('coinValue').textContent = '💰 +0.02 монета за тап (x2 буст!)';
-        document.getElementById('status').textContent = '🔥 БУСТ АКТИВЕН! x2 монеты!';
-
-        updateUI();
-        updateBoostTimer();
-
-        // Показываем уведомление
-        alert('🔥 БУСТ АКТИВИРОВАН! x2 монеты на 4 минуты!');
-    }
-
-    // Запускаем спавн стикеров каждые 10 минут
-    setInterval(() => {
-        if (hasAutoMiner) {
-            spawnFireSticker();
+        #starsContainer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
         }
-    }, 600000); // 10 минут в миллисекундах
 
-    // Обновление таймера буста каждую секунду
-    setInterval(() => {
-        if (boostActive) {
-            updateBoostTimer();
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 4s infinite;
         }
-    }, 1000);
 
-    // Копирование реферальной ссылки
-    function copyReferralLink() {
-        const link = document.getElementById('referralLink').textContent;
-        navigator.clipboard.writeText(link).then(() => {
-            document.getElementById('status').textContent = '✅ Ссылка скопирована!';
-            alert('🔗 Реферальная ссылка скопирована!');
-        });
-    }
-
-    // Генерация звёзд на фоне
-    function createStars() {
-        const container = document.getElementById('starsContainer');
-        for (let i = 0; i < 50; i++) {
-            const star = document.createElement('div');
-            star.className = 'star';
-            star.style.left = Math.random() * 100 + '%';
-            star.style.animationDuration = (5 + Math.random() * 10) + 's';
-            star.style.animationDelay = Math.random() * 5 + 's';
-            star.style.width = (2 + Math.random() * 4) + 'px';
-            star.style.height = star.style.width;
-            container.appendChild(star);
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
         }
-    }
 
-    // Инициализация
-    createStars();
-    updateUI();
+        .coin-container {
+            margin: 30px 0;
+        }
 
-    // Проверяем буст при загрузке
-    if (boostActive) {
-        updateBoostTimer();
-        document.getElementById('coinValue').textContent = '💰 +0.02 монета за тап (x2 буст!)';
-    }
+        .coin {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #ffd700, #ff8c00);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            margin: 0 auto;
+            transition: transform 0.1s;
+            user-select: none;
+        }
 
-    // Запускаем таймер при загрузке
-    startTimer();
-</script>
+        .coin:hover {
+            transform: scale(1.05);
+        }
+
+        .coin:active {
+            transform: scale(0.95);
+        }
+
+        .coin img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+        }
+
+        .balance {
+            margin: 20px 0;
+        }
+
+        .balance h2 {
+            font-size: 28px;
+            color: #ffd700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .balance p {
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        .timer-section {
+            margin: 20px 0;
+        }
+
+        #timer {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffd700;
+            padding: 10px;
+        }
+
+        #timer.ready {
+            color: #00ff00;
+            animation: pulse 0.5s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
+        }
+
+        .status {
+            font-size: 16px;
+            color: #aaa;
+            margin: 10px 0;
+        }
+
+        .shop {
+            margin: 30px 0;
+        }
+
+        .shop h3 {
+            margin-bottom: 15px;
+            color: #ffd700;
+        }
+
+        .shop-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s;
+        }
+
+        .shop-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .shop-item button {
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            color: #0f0c29;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .shop-item button:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .shop-item button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .shop-status {
+            color: #00ff00;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .referral-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 30px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .referral-card p {
+            margin-bottom: 10px;
+        }
+
+        .referral-link {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+
+        .referral-card button {
+            background: linear-gradient(135deg, #00ff88, #00cc66);
+            color: #0f0c29;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .fire-sticker {
+            position: fixed;
+            font-size: 50px;
+            cursor: pointer;
+            z-index: 1000;
+            animation: fall linear forwards;
+            pointer-events: auto;
+        }
+
+        @keyframes fall {
+            0% { top: -100px; opacity: 1; }
+            100% { top: 100vh; opacity: 0; }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #ff8c00;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+            z-index: 1001;
+            animation: slideIn 0.5s;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        .boost-status {
+            background: rgba(255, 140, 0, 0.3);
+            border: 2px solid #ff8c00;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .boost-status.active {
+            display: block;
+            animation: boostPulse 1s infinite;
+        }
+
+        @keyframes boostPulse {
+            0%, 100% { box-shadow: 0 0 10px #ff8c00; }
+            50% { box-shadow: 0 0 30px #ff8c00; }
+        }
+
+        .boost-status h3 {
+            color: #ff8c00;
+            margin-bottom: 10px;
+        }
+
+        #boostTimer {
+            font-size: 20px;
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        .particle {
+            position: fixed;
+            font-size: 16px;
+            pointer-events: none;
+            animation: floatUp 1s ease-out forwards;
+            z-index: 1002;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-100px); }
+        }
+    </style>
+</head>
+<body>
+    <div id="starsContainer"></div>
+
+    <div class="notification" id="stickerNotification">
+        🔥 Хватай огонёк для x2 буста!
+    </div>
+
+    <div class="container">
+        <h1>💰 RB Coin</h1>
+
+        <div class="balance">
+            <h2 id="coinCount">0.00</h2>
+            <p>монет</p>
+            <p class="status" id="status">Тапай монетку!</p>
+        </div>
+
+        <div class="coin-container">
+            <div class="coin" id="coin" onclick="mineCoin(event)">
+                <img src="rbcoin.png" alt="RB Coin" onerror="this.style.display='none'; this.parentElement.textContent='🪙';">
+            </div>
+            <p style="color: #aaa; font-size: 14px; margin-top: 10px;">💰 +0.01 монета за тап</p>
+        </div>
+
+        <div class="timer-section">
+            <div id="timer">5.0 сек</div>
+        </div>
+
+        <div class="boost-status" id="boostStatus">
+            <h3>🔥 БУСТ АКТИВЕН!</h3>
+            <p>Монеты удвоены!</p>
+            <div id="boostTimer">Осталось: 0:00</div>
+        </div>
+
+        <div class="shop">
+            <h3>🛒 Магазин улучшений</h3>
+
+            <div class="shop-item">
+                <h4>🤖 Авто-майнер</h4>
+                <p>Автоматически добывает 0.001 монет/мин</p>
+                <p>Стоимость: <b>1000 монет</b></p>
+                <button id="autoMinerBtn" onclick="buyAutoMiner()">💰 Купить за 1000</button>
+                <div class="shop-status" id="autoMinerStatus"></div>
+            </div>
+        </div>
+
+        <div class="referral-card">
+            <h3>👥 Пригласи друзей</h3>
+            <p>Пригласи друга и получи <b>0.05 монет</b>!</p>
+            <div class="referral-link" id="referralLink">https://t.me/YourBot?start=your_id</div>
+            <button onclick="copyReferralLink()">📋 Копировать</button>
+        </div>
+    </div>
+
+    <script>
+        // ... (весь скрипт, который я дал выше)
+    </script>
+</body>
+</html>
