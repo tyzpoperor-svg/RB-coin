@@ -52,7 +52,7 @@
             z-index: 1;
             text-align: center;
             width: 100%;
-            max-width: 600px; /* Ограничение ширины для лучшего отображения */
+            max-width: 600px;
             padding: 20px;
             box-sizing: border-box;
         }
@@ -72,9 +72,9 @@
         }
 
         .coin {
-            width: 200px; /* Размер монеты */
+            width: 200px;
             height: 200px;
-            background-image: url('https://i.postimg.cc/9XD9sHJ4/geekbot-ru-1788098202047.png'); /* Замените на URL вашей монеты */
+            background-image: url('https://i.postimg.cc/9XD9sHJ4/geekbot-ru-1788098202047.png');
             background-size: cover;
             background-repeat: no-repeat;
             background-position: center;
@@ -156,7 +156,7 @@
         .page-container {
             display: flex;
             transition: transform 0.5s ease-in-out;
-            width: 200%; /* Два контейнера для свайпа */
+            width: 200%;
         }
 
         .page {
@@ -251,19 +251,21 @@
         const referralLinkInput = document.getElementById('referral-link-input');
         const pageContainer = document.querySelector('.page-container');
 
-        let coins = 0.00;
-        let energy = 30;
+        // ====== ЗАГРУЗКА СОХРАНЕННЫХ ДАННЫХ ======
+        let coins = parseFloat(localStorage.getItem('coins')) || 0;
+        let energy = parseInt(localStorage.getItem('energy')) || 30;
+        let isAutoCollecting = localStorage.getItem('autoCollect') === 'true';
+
         const maxEnergy = 30;
         const energyRechargeRate = 0.5; // Единиц энергии в секунду
         const coinsPerTap = 0.01;
         const autoCollectCost = 500; // Стоимость включения автосбора
         const autoCollectRate = 0.02; // Монет в минуту
-        let isAutoCollecting = false;
         let autoCollectInterval = null;
         let lastTapTime = 0;
         const tapCooldown = 100; // Миллисекунды задержки между тапами для анимации
         const referralReward = 30;
-        const baseReferralLink = "https://your-game-domain.com/?ref="; // Замените на реальную ссылку вашего приложения
+        const baseReferralLink = "https://your-game-domain.com/?ref=";
 
         // Генерация звезд для фона
         const starsContainer = document.querySelector('.stars');
@@ -276,178 +278,165 @@
             star.style.width = `${Math.random() * 3}px`;
             star.style.height = `${Math.random() * 3}px`;
             star.style.animationDelay = `${Math.random() * 3}s`;
-            star.style.animationDuration = `${3 + Math.random() * 2}s`; // Разная длительность анимации
+            star.style.animationDuration = `${3 + Math.random() * 2}s`;
             starsContainer.appendChild(star);
         }
 
-        // Функция для обновления отображения монет
+        // ====== ФУНКЦИИ СОХРАНЕНИЯ ======
+        function saveGame() {
+            localStorage.setItem('coins', coins.toString());
+            localStorage.setItem('energy', energy.toString());
+            localStorage.setItem('autoCollect', isAutoCollecting.toString());
+        }
+
+        // ====== ФУНКЦИИ ОБНОВЛЕНИЯ ======
         function updateCoinsDisplay() {
             coinsElement.textContent = coins.toFixed(2);
         }
 
-        // Функция для обновления отображения энергии
         function updateEnergyDisplay() {
-            energyElement.textContent = energy;
+            energyElement.textContent = Math.floor(energy);
             const energyPercentage = (energy / maxEnergy) * 100;
             energyFillElement.style.width = `${energyPercentage}%`;
         }
 
-        // Функция для получения уникальной реферальной ссылки
-        function generateReferralLink() {
-            // Здесь можно генерировать уникальный ID пользователя или использовать его ID из базы данных
-            const userId = `user_${Date.now()}`; // Пример генерации ID
-            return `${baseReferralLink}${userId}`;
-        }
-
-        // Инициализация отображения
+        // ====== ИНИЦИАЛИЗАЦИЯ ======
         updateCoinsDisplay();
         updateEnergyDisplay();
-        referralLinkInput.value = generateReferralLink();
+        updateAutoCollectUI();
 
-        // Функция нажатия на монету
-        coinElement.addEventListener('click', () => {
-            const currentTime = Date.now();
-            if (currentTime - lastTapTime < tapCooldown) {
-                return; // Игнорируем слишком частые клики
-            }
-            lastTapTime = currentTime;
+        // Восстановление энергии при загрузке (учитывая время отсутствия)
+        restoreEnergy();
 
-            if (energy >= 1) {
-                energy--;
-                coins += coinsPerTap;
+        // Если автосбор был включен, запускаем его
+        if (isAutoCollecting) {
+            startAutoCollect();
+        }
+
+        // ====== ВОССТАНОВЛЕНИЕ ЭНЕРГИИ ======
+        function restoreEnergy() {
+            const lastVisit = localStorage.getItem('lastVisit');
+            if (lastVisit) {
+                const elapsedSeconds = (Date.now() - parseInt(lastVisit)) / 1000;
+                const energyToRestore = elapsedSeconds * energyRechargeRate;
+                energy = Math.min(energy + energyToRestore, maxEnergy);
                 updateEnergyDisplay();
+            }
+            saveGame();
+        }
+
+        // ====== КЛИК ПО МОНЕТЕ ======
+        coinElement.addEventListener('click', function(e) {
+            if (energy >= 1) {
+                // Добавляем монеты
+                coins += coinsPerTap;
                 updateCoinsDisplay();
 
-                // Анимация нажатия на монету
-                coinElement.style.transform = 'scale(0.95)';
+                // Тратим энергию
+                energy -= 1;
+                updateEnergyDisplay();
+
+                // Анимация нажатия
+                this.querySelector('.coin').style.transform = 'scale(0.95)';
                 setTimeout(() => {
-                    coinElement.style.transform = 'scale(1)';
+                    this.querySelector('.coin').style.transform = 'scale(1)';
                 }, 100);
 
-            } else {
-                // Можно добавить уведомление о недостатке энергии
-                console.log("Недостаточно энергии!");
+                // Сохраняем игру
+                saveGame();
+
+                // Обновляем время последнего визита
+                localStorage.setItem('lastVisit', Date.now().toString());
             }
         });
 
-        // Функция восстановления энергии
+        // ====== ВОССТАНОВЛЕНИЕ ЭНЕРГИИ (КАЖДУЮ СЕКУНДУ) ======
         setInterval(() => {
             if (energy < maxEnergy) {
                 energy += energyRechargeRate;
-                if (energy > maxEnergy) {
-                    energy = maxEnergy;
-                }
+                if (energy > maxEnergy) energy = maxEnergy;
                 updateEnergyDisplay();
+                saveGame();
             }
-        }, 1000); // Восстановление каждую секунду
+        }, 1000);
 
-        // Функция автосбора
-        toggleAutoCollectButton.addEventListener('click', () => {
+        // ====== АВТОСБОР ======
+        function updateAutoCollectUI() {
+            autoCollectStatusElement.textContent = isAutoCollecting ? 'Включен' : 'Выключен';
+            toggleAutoCollectButton.textContent = isAutoCollecting ? 'Выключить автосбор' : 'Включить автосбор';
+        }
+
+        function startAutoCollect() {
+            if (autoCollectInterval) clearInterval(autoCollectInterval);
+            autoCollectInterval = setInterval(() => {
+                coins += autoCollectRate;
+                updateCoinsDisplay();
+                saveGame();
+            }, 60000); // Каждую минуту
+        }
+
+        toggleAutoCollectButton.addEventListener('click', function() {
             if (!isAutoCollecting) {
                 if (coins >= autoCollectCost) {
                     coins -= autoCollectCost;
                     isAutoCollecting = true;
-                    autoCollectStatusElement.textContent = 'Включен';
-                    toggleAutoCollectButton.textContent = 'Отключить автосбор';
-                    updateCoinsDisplay();
-
-                    autoCollectInterval = setInterval(() => {
-                        coins += autoCollectRate / 60; // Добавляем монеты каждую секунду
-                        updateCoinsDisplay();
-                    }, 1000); // Обновление каждую секунду
-
+                    startAutoCollect();
                 } else {
-                    alert(`Недостаточно монет для включения автосбора. Требуется ${autoCollectCost} монет.`);
+                    alert(`Недостаточно монет! Нужно ${autoCollectCost} монет для включения автосбора.`);
                 }
             } else {
                 isAutoCollecting = false;
-                autoCollectStatusElement.textContent = 'Выключен';
-                toggleAutoCollectButton.textContent = 'Включить автосбор';
-                clearInterval(autoCollectInterval);
+                if (autoCollectInterval) clearInterval(autoCollectInterval);
             }
+            updateAutoCollectUI();
+            updateCoinsDisplay();
+            saveGame();
         });
 
-        // Функция копирования реферальной ссылки
+        // ====== РЕФЕРАЛЬНАЯ ССЫЛКА ======
+        const userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        const referralLink = baseReferralLink + userId;
+        referralLinkInput.value = referralLink;
+
+        // ====== КОПИРОВАНИЕ ССЫЛКИ ======
         function copyReferralLink() {
-            const link = referralLinkInput.value;
-            navigator.clipboard.writeText(link).then(() => {
-                alert('Реферальная ссылка скопирована!');
-            }).catch(err => {
-                console.error('Ошибка копирования ссылки: ', err);
-                alert('Не удалось скопировать ссылку. Попробуйте вручную.');
-            });
+            referralLinkInput.select();
+            document.execCommand('copy');
+            alert('Ссылка скопирована!');
         }
 
-        // Обработка свайпа для перехода между страницами
-        let touchStartX = 0;
-        let touchEndX = 0;
-        let currentPage = 0; // 0 - основная страница, 1 - страница ссылок
+        // ====== СВАЙП ДЛЯ ПЕРЕКЛЮЧЕНИЯ СТРАНИЦ ======
+        let startX = 0;
+        let currentPage = 0;
 
-        document.addEventListener('touchstart', (e) => {
-            touchStartX = e.touches[0].clientX;
+        document.addEventListener('touchstart', function(e) {
+            startX = e.touches[0].clientX;
         });
 
-        document.addEventListener('touchmove', (e) => {
-            touchEndX = e.touches[0].clientX;
-            const diff = touchEndX - touchStartX;
-            if (Math.abs(diff) > 50) { // Минимальное расстояние для свайпа
-                if (diff < 0 && currentPage === 0) { // Свайп влево
-                    pageContainer.style.transform = `translateX(-50%)`;
+        document.addEventListener('touchend', function(e) {
+            const endX = e.changedTouches[0].clientX;
+            const diffX = endX - startX;
+
+            if (Math.abs(diffX) > 50) {
+                if (diffX < 0 && currentPage === 0) {
+                    // Свайп влево
                     currentPage = 1;
-                    document.querySelector('.swipe-indicator').textContent = '→ Свайп вправо для возврата';
-                } else if (diff > 0 && currentPage === 1) { // Свайп вправо
-                    pageContainer.style.transform = `translateX(0%)`;
+                    pageContainer.style.transform = 'translateX(-50%)';
+                    document.querySelector('.swipe-indicator').textContent = 'Свайп вправо для возврата →';
+                } else if (diffX > 0 && currentPage === 1) {
+                    // Свайп вправо
                     currentPage = 0;
+                    pageContainer.style.transform = 'translateX(0)';
                     document.querySelector('.swipe-indicator').textContent = '← Свайп влево для перехода на страницу с ссылками';
                 }
-                touchStartX = 0; // Сброс для предотвращения множественных срабатываний
-                touchEndX = 0;
             }
         });
 
-        document.addEventListener('touchend', () => {
-            touchStartX = 0;
-            touchEndX = 0;
+        // ====== СОХРАНЕНИЕ ПРИ ЗАКРЫТИИ ======
+        window.addEventListener('beforeunload', function() {
+            saveGame();
+            localStorage.setItem('lastVisit', Date.now().toString());
         });
-
-        // Обработка свайпа для мыши (для десктопа)
-        let mouseStartX = 0;
-        let mouseEndX = 0;
-        let isDragging = false;
-
-        document.addEventListener('mousedown', (e) => {
-            if (e.clientX < window.innerWidth * 0.8) { // Игнорируем клики на сайдбарах, если они есть
-                isDragging = true;
-                mouseStartX = e.clientX;
-            }
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            mouseEndX = e.clientX;
-            const diff = mouseEndX - mouseStartX;
-            if (Math.abs(diff) > 50) { // Минимальное расстояние для свайпа
-                if (diff < 0 && currentPage === 0) { // Свайп влево
-                    pageContainer.style.transform = `translateX(-50%)`;
-                    currentPage = 1;
-                    document.querySelector('.swipe-indicator').textContent = '→ Свайп вправо для возврата';
-                } else if (diff > 0 && currentPage === 1) { // Свайп вправо
-                    pageContainer.style.transform = `translateX(0%)`;
-                    currentPage = 0;
-                    document.querySelector('.swipe-indicator').textContent = '← Свайп влево для перехода на страницу с ссылками';
-                }
-                isDragging = false; // Сброс для предотвращения множественных срабатываний
-                mouseStartX = 0;
-                mouseEndX = 0;
-            }
-        });
-
-        document.addEventListener('mouseup', () => {
-            isDragging = false;
-            mouseStartX = 0;
-            mouseEndX = 0;
-        });
-
     </script>
 </body>
 </html>
