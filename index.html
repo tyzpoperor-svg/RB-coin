@@ -1,460 +1,286 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RB Coin - Зарабатывай монеты!</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+<script>
+    // Баланс монет
+    let coins = parseFloat(localStorage.getItem('rb_coins')) || 0;
+    coins = parseFloat(coins.toFixed(2));
+
+    // Авто-майнер
+    let hasAutoMiner = localStorage.getItem('rb_auto_miner') === 'true';
+    let autoMinerEarned = parseFloat(localStorage.getItem('rb_auto_miner_earned')) || 0;
+
+    // Буст
+    let boostActive = false;
+    let boostEndTime = parseInt(localStorage.getItem('rb_boost_end')) || 0;
+    if (boostEndTime > Date.now()) {
+        boostActive = true;
+    }
+
+    // Обновление интерфейса
+    function updateUI() {
+        document.getElementById('coinCount').textContent = coins.toFixed(2);
+
+        // Обновляем статус авто-майнера
+        const autoMinerBtn = document.getElementById('autoMinerBtn');
+        const autoMinerStatus = document.getElementById('autoMinerStatus');
+
+        if (hasAutoMiner) {
+            autoMinerBtn.disabled = true;
+            autoMinerBtn.textContent = '✅ Куплено';
+            autoMinerStatus.textContent = '⛏️ Добывает: 0.001 монет/мин';
+        } else {
+            autoMinerBtn.disabled = coins < 1000;
+            autoMinerBtn.textContent = coins < 1000 ? '💰 Нужно 1000 монет' : '⚡ Купить за 1000';
+            autoMinerStatus.textContent = '';
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            overflow: hidden;
-            position: relative;
+        // Обновляем статус буста
+        const boostStatus = document.getElementById('boostStatus');
+        if (boostActive) {
+            boostStatus.classList.add('active');
+            updateBoostTimer();
+        } else {
+            boostStatus.classList.remove('active');
+        }
+    }
+
+    // Обновление таймера буста
+    function updateBoostTimer() {
+        const boostTimer = document.getElementById('boostTimer');
+        const remaining = Math.max(0, boostEndTime - Date.now());
+        const seconds = Math.floor(remaining / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        boostTimer.textContent = `Осталось: ${minutes}:${secs.toString().padStart(2, '0')}`;
+
+        if (remaining <= 0) {
+            boostActive = false;
+            localStorage.removeItem('rb_boost_end');
+            document.getElementById('boostStatus').classList.remove('active');
+            document.getElementById('coinValue').textContent = '💰 +0.01 монета за тап';
+        }
+    }
+
+    // Функция добычи монет (тап)
+    function mineCoin(event) {
+        // Определяем награду за тап
+        let reward = 0.01;
+        if (boostActive) {
+            reward = 0.02; // x2 буст
         }
 
-        /* Анимированные звёзды */
-        .stars-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
-            overflow: hidden;
-        }
+        coins += reward;
+        coins = parseFloat(coins.toFixed(2));
+        localStorage.setItem('rb_coins', coins.toString());
 
-        .star {
-            position: absolute;
-            width: 5px;
-            height: 5px;
-            background: #fff;
-            border-radius: 50%;
-            animation: fall linear infinite;
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-        }
+        // Анимация частиц
+        createParticles(event.clientX, event.clientY, `+${reward.toFixed(2)}`);
 
-        @keyframes fall {
-            from {
-                transform: translateY(-100%);
-                opacity: 1;
-            }
-            to {
-                transform: translateY(100vh);
-                opacity: 0;
-            }
-        }
+        // Обновляем UI
+        updateUI();
 
-        .container {
-            max-width: 400px;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 25px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-            text-align: center;
-            position: relative;
-            z-index: 1;
-        }
+        // Обновляем статус
+        document.getElementById('status').textContent = boostActive ? '🔥 Буст активен! +0.02 за тап!' : `+${reward.toFixed(2)} монет!`;
 
-        h1 {
-            color: #fff;
-            font-size: 36px;
-            margin-bottom: 10px;
-            font-weight: 900;
-            letter-spacing: 2px;
-            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-        }
+        // Перезапускаем таймер (каждые 5 секунд можно тапать)
+        startTimer();
+    }
 
-        .tagline {
-            color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 25px;
-            font-size: 14px;
-        }
+    // Таймер обратного отсчёта
+    let timerInterval;
+    let timeLeft = 5.0;
 
-        .counter {
-            background: linear-gradient(135deg, #ffd700, #ffaa00);
-            border-radius: 20px;
-            padding: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.3);
-        }
+    function startTimer() {
+        if (timerInterval) clearInterval(timerInterval);
+        timeLeft = 5.0;
+        updateTimerDisplay();
 
-        .counter-label {
-            color: #8B6914;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        #coinCount {
-            font-size: 42px;
-            font-weight: 900;
-            color: #fff;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        /* Кликабельная монета */
-        .coin-container {
-            position: relative;
-            margin: 20px auto;
-            width: 200px;
-            height: 200px;
-            cursor: pointer;
-        }
-
-        .coin {
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            transition: transform 0.1s;
-            user-select: none;
-            -webkit-user-drag: none;
-        }
-
-        .coin:active {
-            transform: scale(0.85);
-        }
-
-        .coin-glow {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(255, 215, 0, 0.3) 0%, transparent 70%);
-            animation: glow 2s ease-in-out infinite;
-            pointer-events: none;
-        }
-
-        @keyframes glow {
-            0%, 100% {
-                opacity: 0.5;
-                transform: translate(-50%, -50%) scale(1);
-            }
-            50% {
-                opacity: 1;
-                transform: translate(-50%, -50%) scale(1.2);
-            }
-        }
-
-        .progress-bar {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            height: 10px;
-            overflow: hidden;
-            margin: 15px 0;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .progress-fill {
-            background: linear-gradient(90deg, #ffd700, #ffaa00);
-            height: 100%;
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-
-        .status {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 13px;
-            margin-bottom: 20px;
-            min-height: 20px;
-        }
-
-        .referral-section {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .referral-title {
-            color: #fff;
-            font-weight: 700;
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-
-        .referral-link {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
-            padding: 10px;
-            font-size: 12px;
-            color: #fff;
-            word-break: break-all;
-            margin-bottom: 10px;
-            user-select: all;
-        }
-
-        .copy-btn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: transform 0.2s;
-            width: 100%;
-        }
-
-        .copy-btn:hover {
-            transform: scale(1.02);
-        }
-
-        .tg-btn {
-            display: inline-block;
-            background: linear-gradient(135deg, #0088cc, #0077b5);
-            color: white;
-            text-decoration: none;
-            padding: 12px 30px;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 16px;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 5px 15px rgba(0, 136, 204, 0.4);
-            margin-top: 10px;
-        }
-
-        .tg-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 7px 20px rgba(0, 136, 204, 0.5);
-        }
-
-        .referral-bonus {
-            background: linear-gradient(135deg, rgba(76, 175, 80, 0.3), rgba(69, 160, 73, 0.3));
-            border: 1px solid rgba(76, 175, 80, 0.5);
-            color: white;
-            border-radius: 10px;
-            padding: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 15px;
-        }
-
-        .footer {
-            margin-top: 20px;
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 12px;
-        }
-
-        .particles {
-            position: absolute;
-            pointer-events: none;
-            z-index: 2;
-        }
-
-        .particle {
-            position: absolute;
-            font-size: 24px;
-            animation: particleFloat 1s ease-out forwards;
-            pointer-events: none;
-        }
-
-        @keyframes particleFloat {
-            0% {
-                transform: translateY(0) scale(1);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(-50px) scale(0.5);
-                opacity: 0;
-            }
-        }
-    </style>
-</head>
-<body>
-    <!-- Звёздный фон -->
-    <div class="stars-container" id="starsContainer"></div>
-
-    <div class="container">
-        <h1>🪙 RB COIN</h1>
-        <p class="tagline">Тапай по монете и зарабатывай!</p>
-
-        <div class="counter">
-            <div class="counter-label">Твои монеты:</div>
-            <div id="coinCount">0</div>
-        </div>
-
-        <!-- Кликабельная монета -->
-        <div class="coin-container" onclick="mineCoin(event)">
-            <div class="coin-glow"></div>
-            <img src="rbcoin.png" alt="RB Coin" class="coin" id="coin">
-        </div>
-
-        <!-- Прогресс до следующей монеты -->
-        <div class="progress-bar">
-            <div class="progress-fill" id="progressFill"></div>
-        </div>
-
-        <p class="status" id="status">Тапай по монете!</p>
-
-        <div class="referral-bonus">
-            🎁 Приглашай друзей и получай <strong>100 монет</strong> за каждого!
-        </div>
-
-        <div class="referral-section">
-            <div class="referral-title">👥 Твоя реферальная ссылка:</div>
-            <div class="referral-link" id="referralLink">https://tyzpopero-svg.github.io/RB-coin/?ref=your_id</div>
-            <button class="copy-btn" onclick="copyReferralLink()">📋 Скопировать ссылку</button>
-        </div>
-
-        <a href="https://t.me/+ciz2RtMWH9MzMzUy" target="_blank" class="tg-btn">
-            📢 Наш Telegram канал
-        </a>
-
-        <p class="footer">© 2026 RB Coin. Все права защищены.</p>
-    </div>
-
-    <script>
-        // Баланс монет
-        let coins = localStorage.getItem('rb_coins') || 0;
-        coins = parseInt(coins);
-        document.getElementById('coinCount').textContent = coins;
-
-        // Проверка реферальной ссылки
-        const urlParams = new URLSearchParams(window.location.search);
-        const ref = urlParams.get('ref');
-
-        if (ref && !localStorage.getItem('rb_ref_' + ref)) {
-            coins += 100;
-            localStorage.setItem('rb_coins', coins);
-            localStorage.setItem('rb_ref_' + ref, 'true');
-            document.getElementById('coinCount').textContent = coins;
-            alert('🎉 Ты получил 100 монет за переход по реферальной ссылке!');
-        }
-
-        // Создание звёзд
-        function createStars() {
-            const container = document.getElementById('starsContainer');
-            for (let i = 0; i < 50; i++) {
-                const star = document.createElement('div');
-                star.className = 'star';
-                star.style.left = Math.random() * 100 + '%';
-                star.style.animationDuration = (Math.random() * 5 + 3) + 's';
-                star.style.animationDelay = Math.random() * 5 + 's';
-                star.style.width = (Math.random() * 4 + 2) + 'px';
-                star.style.height = star.style.width;
-                container.appendChild(star);
-            }
-        }
-
-        createStars();
-
-        // Функция добычи монет
-        let clickCount = 0;
-        let lastClickTime = 0;
-        const CLICKS_NEEDED = 5; // 5 кликов для монеты
-        const COOLDOWN = 5000; // 5 секунд между кликами
-
-        function mineCoin(event) {
-            const now = Date.now();
-            const timeDiff = now - lastClickTime;
-
-            // Проверка кулдауна
-            if (timeDiff < COOLDOWN) {
-                const secondsLeft = Math.ceil((COOLDOWN - timeDiff) / 1000);
-                document.getElementById('status').textContent = `⏳ Подожди ${secondsLeft} сек...`;
-                return;
-            }
-
-            lastClickTime = now;
-
-            // Анимация монеты
-            const coin = document.getElementById('coin');
-            coin.style.transform = 'scale(0.85)';
-            setTimeout(() => {
-                coin.style.transform = 'scale(1)';
-            }, 100);
-
-            // Создание частиц
-            if (event) {
-                createParticles(event.clientX, event.clientY);
-            }
-
-            // Увеличиваем счётчик кликов
-            clickCount++;
-
-            // Обновляем прогресс
-            const progress = ((clickCount % CLICKS_NEEDED) / CLICKS_NEEDED) * 100;
-            document.getElementById('progressFill').style.width = progress + '%';
-
-            // Каждый 5-й клик даёт монету
-            if (clickCount % CLICKS_NEEDED === 0) {
-                coins += 1;
-                localStorage.setItem('rb_coins', coins);
-                document.getElementById('coinCount').textContent = coins;
-                document.getElementById('status').textContent = '✅ +1 монета!';
-                document.getElementById('progressFill').style.width = '0%';
+        timerInterval = setInterval(() => {
+            timeLeft -= 0.1;
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+                document.getElementById('timer').textContent = '✅ ГОТОВО!';
+                document.getElementById('timer').classList.add('ready');
+                document.getElementById('status').textContent = 'Тапай! Монета готова!';
             } else {
-                const clicksLeft = CLICKS_NEEDED - (clickCount % CLICKS_NEEDED);
-                document.getElementById('status').textContent = `⏳ Ещё ${clicksLeft} кликов до монеты...`;
+                updateTimerDisplay();
             }
+        }, 100);
+    }
+
+    function updateTimerDisplay() {
+        document.getElementById('timer').textContent = timeLeft.toFixed(1) + ' сек';
+        document.getElementById('timer').classList.remove('ready');
+    }
+
+    // Создание частиц при тапе
+    function createParticles(x, y, text) {
+        const container = document.getElementById('starsContainer');
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.textContent = text;
+        particle.style.left = x + 'px';
+        particle.style.top = y + 'px';
+        particle.style.color = '#ffd700';
+        particle.style.fontWeight = 'bold';
+        container.appendChild(particle);
+
+        setTimeout(() => {
+            particle.remove();
+        }, 1000);
+    }
+
+    // Авто-майнер
+    function buyAutoMiner() {
+        if (coins >= 1000 && !hasAutoMiner) {
+            coins -= 1000;
+            coins = parseFloat(coins.toFixed(2));
+            hasAutoMiner = true;
+            localStorage.setItem('rb_coins', coins.toString());
+            localStorage.setItem('rb_auto_miner', 'true');
+
+            // Начинаем автоматическую добычу
+            startAutoMining();
+            updateUI();
+
+            document.getElementById('status').textContent = '🤖 Авто-майнер куплен!';
+            alert('🎉 Поздравляем! Авто-майнер теперь работает за тебя!');
         }
+    }
 
-        // Создание частиц при клике
-        function createParticles(x, y) {
-            const container = document.querySelector('.container');
-            const rect = container.getBoundingClientRect();
-            const particleContainer = document.createElement('div');
-            particleContainer.className = 'particles';
-            particleContainer.style.left = (x - rect.left) + 'px';
-            particleContainer.style.top = (y - rect.top) + 'px';
+    // Автоматическая добыча
+    let autoMinerInterval;
 
-            for (let i = 0; i < 5; i++) {
-                const particle = document.createElement('span');
-                particle.className = 'particle';
-                particle.textContent = '✨';
-                particle.style.left = (Math.random() - 0.5) * 40 + 'px';
-                particle.style.animationDelay = Math.random() * 0.2 + 's';
-                particleContainer.appendChild(particle);
+    function startAutoMining() {
+        if (!hasAutoMiner || autoMinerInterval) return;
+
+        // Добываем каждую минуту по 0.001
+        autoMinerInterval = setInterval(() => {
+            if (hasAutoMiner) {
+                let earnings = 0.001;
+                if (boostActive) {
+                    earnings = 0.002; // x2 если буст активен
+                }
+
+                coins += earnings;
+                coins = parseFloat(coins.toFixed(2));
+                localStorage.setItem('rb_coins', coins.toString());
+
+                // Обновляем счётчик заработанного
+                autoMinerEarned += earnings;
+                localStorage.setItem('rb_auto_miner_earned', autoMinerEarned.toString());
+
+                updateUI();
+                document.getElementById('status').textContent = `🤖 Авто-майнер добыл +${earnings.toFixed(3)} монет`;
             }
+        }, 60000); // Каждые 60 секунд
+    }
 
-            container.appendChild(particleContainer);
-            setTimeout(() => {
-                particleContainer.remove();
-            }, 1000);
+    // Проверка и запуск авто-майнера при загрузке
+    if (hasAutoMiner) {
+        startAutoMining();
+    }
+
+    // Система падающих стикеров огонька
+    function spawnFireSticker() {
+        if (!hasAutoMiner) return; // Только если есть авто-майнер
+
+        // Создаём стикер
+        const sticker = document.createElement('div');
+        sticker.className = 'fire-sticker';
+        sticker.textContent = '🔥';
+        sticker.style.left = Math.random() * (window.innerWidth - 100) + 'px';
+        sticker.style.animationDuration = (2 + Math.random() * 2) + 's';
+
+        // Показываем уведомление
+        const notification = document.getElementById('stickerNotification');
+        notification.style.display = 'block';
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 3000);
+
+        // Обработчик тапа по стикеру
+        sticker.onclick = function(e) {
+            e.stopPropagation();
+            activateBoost();
+            sticker.remove();
+        };
+
+        document.body.appendChild(sticker);
+
+        // Удаляем стикер через 5 секунд если не тапнули
+        setTimeout(() => {
+            if (sticker.parentNode) {
+                sticker.remove();
+            }
+        }, 5000);
+    }
+
+    // Активация буста x2
+    function activateBoost() {
+        boostActive = true;
+        boostEndTime = Date.now() + 4 * 60 * 1000; // 4 минуты
+        localStorage.setItem('rb_boost_end', boostEndTime.toString());
+
+        // Обновляем интерфейс
+        document.getElementById('boostStatus').classList.add('active');
+        document.getElementById('coinValue').textContent = '💰 +0.02 монета за тап (x2 буст!)';
+        document.getElementById('status').textContent = '🔥 БУСТ АКТИВЕН! x2 монеты!';
+
+        updateUI();
+        updateBoostTimer();
+
+        // Показываем уведомление
+        alert('🔥 БУСТ АКТИВИРОВАН! x2 монеты на 4 минуты!');
+    }
+
+    // Запускаем спавн стикеров каждые 10 минут
+    setInterval(() => {
+        if (hasAutoMiner) {
+            spawnFireSticker();
         }
+    }, 600000); // 10 минут в миллисекундах
 
-        // Обновляем реферальную ссылку
-        const userId = localStorage.getItem('rb_user_id') || Math.random().toString(36).substr(2, 9);
-        localStorage.setItem('rb_user_id', userId);
-        document.getElementById('referralLink').textContent = 
-            `https://tyzpopero-svg.github.io/RB-coin/?ref=${userId}`;
-
-        // Копирование реферальной ссылки
-        function copyReferralLink() {
-            const link = document.getElementById('referralLink').textContent;
-            navigator.clipboard.writeText(link).then(() => {
-                alert('✅ Ссылка скопирована! Отправь её друзьям и получай монеты!');
-            }).catch(() => {
-                const textarea = document.createElement('textarea');
-                textarea.value = link;
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-                alert('✅ Ссылка скопирована!');
-            });
+    // Обновление таймера буста каждую секунду
+    setInterval(() => {
+        if (boostActive) {
+            updateBoostTimer();
         }
-    </script>
-</body>
-</html>
+    }, 1000);
+
+    // Копирование реферальной ссылки
+    function copyReferralLink() {
+        const link = document.getElementById('referralLink').textContent;
+        navigator.clipboard.writeText(link).then(() => {
+            document.getElementById('status').textContent = '✅ Ссылка скопирована!';
+            alert('🔗 Реферальная ссылка скопирована!');
+        });
+    }
+
+    // Генерация звёзд на фоне
+    function createStars() {
+        const container = document.getElementById('starsContainer');
+        for (let i = 0; i < 50; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.animationDuration = (5 + Math.random() * 10) + 's';
+            star.style.animationDelay = Math.random() * 5 + 's';
+            star.style.width = (2 + Math.random() * 4) + 'px';
+            star.style.height = star.style.width;
+            container.appendChild(star);
+        }
+    }
+
+    // Инициализация
+    createStars();
+    updateUI();
+
+    // Проверяем буст при загрузке
+    if (boostActive) {
+        updateBoostTimer();
+        document.getElementById('coinValue').textContent = '💰 +0.02 монета за тап (x2 буст!)';
+    }
+
+    // Запускаем таймер при загрузке
+    startTimer();
+</script>
