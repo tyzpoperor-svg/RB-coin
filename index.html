@@ -16,9 +16,10 @@
             justify-content: center;
             align-items: center;
             overflow: hidden;
+            user-select: none;
         }
 
-        /* ===== ТАЙМЕР СБРОСА ===== */
+        /* Таймер сброса */
         .reset-timer {
             position: fixed;
             top: 20px;
@@ -116,7 +117,7 @@
         .reset-message-title { font-size: 28px; font-weight: bold; color: #f39c12; margin-bottom: 10px; }
         .reset-message-text { color: #aaa; font-size: 18px; }
 
-        /* ===== ИГРОВОЙ КОНТЕЙНЕР ===== */
+        /* Игровой контейнер */
         .game-container {
             background: rgba(255,255,255,0.1);
             border-radius: 20px;
@@ -158,23 +159,70 @@
 
         .balance-amount span { font-size: 20px; color: #e67e22; }
 
-        .click-button {
-            width: 100%;
-            padding: 25px;
-            font-size: 24px;
-            font-weight: 700;
-            border: none;
-            border-radius: 15px;
-            cursor: pointer;
-            background: linear-gradient(135deg, #e94560, #c23152);
-            color: white;
-            transition: all 0.3s;
-            margin: 20px 0;
-            box-shadow: 0 5px 20px rgba(233,69,96,0.4);
+        /* МОНЕТА С ФОТО */
+        .coin-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 30px 0;
+            perspective: 1000px;
         }
 
-        .click-button:hover { transform: scale(1.02); }
-        .click-button:active { transform: scale(0.95); }
+        .coin {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #ffd700, #ffa500 60%, #ff8c00);
+            border: 8px solid #daa520;
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.1s;
+            box-shadow: 
+                0 0 40px rgba(255, 215, 0, 0.5),
+                inset 0 -10px 20px rgba(0,0,0,0.2),
+                inset 0 10px 20px rgba(255,255,255,0.3);
+            animation: coinFloat 3s ease-in-out infinite;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .coin-photo {
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .coin:hover {
+            transform: scale(1.05);
+            box-shadow: 
+                0 0 60px rgba(255, 215, 0, 0.8),
+                inset 0 -10px 20px rgba(0,0,0,0.2),
+                inset 0 10px 20px rgba(255,255,255,0.3);
+        }
+
+        .coin:active {
+            transform: scale(0.9);
+        }
+
+        .coin-bounce {
+            animation: coinBounce 0.3s ease;
+        }
+
+        @keyframes coinFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes coinBounce {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.85); }
+            100% { transform: scale(1); }
+        }
 
         .stats-grid {
             display: grid;
@@ -192,7 +240,6 @@
 
         .stat-value { font-size: 22px; font-weight: 700; color: #667eea; }
         .stat-label { font-size: 10px; color: #aaa; margin-top: 5px; }
-        .stat-value.fire-timer { color: #ff4500; }
 
         .upgrade-button {
             width: 100%;
@@ -240,31 +287,6 @@
             to { opacity: 0; transform: translateY(-80px); }
         }
 
-        /* Огонёк */
-        .fire-sticker {
-            position: fixed;
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #ff6b35, #ff4500);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 30px;
-            cursor: pointer;
-            box-shadow: 0 0 20px rgba(255,69,0,0.8);
-            z-index: 100;
-            animation: pulse 2s infinite;
-            transition: transform 0.3s;
-        }
-
-        .fire-sticker:hover { transform: scale(1.2); }
-
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 20px rgba(255,69,0,0.8); }
-            50% { box-shadow: 0 0 40px rgba(255,69,0,1); }
-        }
-
         @media (max-width: 480px) {
             .game-container { margin: 20px; padding: 20px; }
             .balance-amount { font-size: 36px; }
@@ -272,6 +294,8 @@
             .reset-timer { padding: 10px 15px; }
             .reset-timer-display { font-size: 24px; }
             .reset-progress { width: 140px; }
+            .coin { width: 150px; height: 150px; }
+            .coin-photo { width: 75%; height: 75%; }
         }
     </style>
 </head>
@@ -301,10 +325,16 @@
 
         <div class="balance-display">
             <div class="balance-label">Баланс</div>
-            <div class="balance-amount" id="balance">0 <span>RB</span></div>
+            <div class="balance-amount" id="balance">0.00 <span>RB</span></div>
         </div>
 
-        <button class="click-button" onclick="clickCoin(event)">👆 КЛИКАЙ!</button>
+        <!-- МОНЕТА С ВАШИМ ФОТО -->
+        <div class="coin-container">
+            <div class="coin" id="coin" onclick="tapCoin(event)">
+                <!-- ЗАМЕНИТЕ ССЫЛКУ НА ВАШЕ ФОТО -->
+                <img src="https://via.placeholder.com/200" alt="Ваше фото" class="coin-photo" id="coinPhoto">
+            </div>
+        </div>
 
         <div class="stats-grid">
             <div class="stat-item">
@@ -316,11 +346,11 @@
                 <div class="stat-label">Уровень</div>
             </div>
             <div class="stat-item">
-                <div class="stat-value" id="perClick">+1</div>
-                <div class="stat-label">За клик</div>
+                <div class="stat-value" id="perClick">0.01</div>
+                <div class="stat-label">За тап</div>
             </div>
             <div class="stat-item">
-                <div class="stat-value fire-timer" id="nextFire">10:00</div>
+                <div class="stat-value" id="nextFire">10:00</div>
                 <div class="stat-label">До огонька</div>
             </div>
         </div>
@@ -331,68 +361,71 @@
 
     <script>
         // ===== ПЕРЕМЕННЫЕ =====
-        let balance = 0;
+        let balance = 0.00;
         let clicks = 0;
         let level = 1;
-        let perClick = 1;
-        let boostActive = false;
-        let boostTimeLeft = 0;
-        let fireTimer = 600; // 10 минут
-        let fireVisible = false;
-        let resetTimeLeft = 3600; // 1 час = 3600 сек
+        let perClick = 0.01;
+        let resetTimeLeft = 3600;
         let resetTotalTime = 3600;
+
+        const TAP_DELAY = 300;
+        let lastTapTime = 0;
 
         // ===== ФУНКЦИИ =====
 
-        // Клик по кнопке
-        function clickCoin(event) {
-            let earned = perClick * (boostActive ? 2 : 1);
-            balance += earned;
+        // Тап по монете
+        function tapCoin(event) {
+            const now = Date.now();
+
+            if (now - lastTapTime < TAP_DELAY) {
+                showFloatingNumber(event.clientX, event.clientY, '⏳', false);
+                return;
+            }
+            lastTapTime = now;
+
+            balance = parseFloat((balance + perClick).toFixed(2));
             clicks++;
 
-            // Обновление интерфейса
-            updateDisplay();
+            const coin = document.getElementById('coin');
+            coin.classList.add('coin-bounce');
+            setTimeout(() => coin.classList.remove('coin-bounce'), 300);
 
-            // Всплывающая цифра
-            showFloatingNumber(event.clientX, event.clientY, '+' + earned, boostActive);
+            updateDisplay();
+            showFloatingNumber(event.clientX, event.clientY, '+' + perClick.toFixed(2), false);
         }
 
-        // Всплывающая цифра
         function showFloatingNumber(x, y, text, isBoost) {
             const num = document.createElement('div');
             num.className = 'floating-number';
             if (isBoost) num.style.color = '#ff4500';
+            if (text === '⏳') num.style.color = '#ff4444';
             num.textContent = text;
             num.style.left = x + 'px';
             num.style.top = y + 'px';
             document.body.appendChild(num);
-
             setTimeout(() => num.remove(), 1000);
         }
 
-        // Улучшение
         function upgrade() {
             const cost = 100 * level;
             if (balance >= cost) {
                 balance -= cost;
                 level++;
-                perClick++;
+                perClick = parseFloat((perClick + 0.01).toFixed(2));
                 updateDisplay();
-                showMessage('⬆️ Улучшение! +' + perClick + ' за клик', 'success');
+                showMessage('⬆️ Улучшение! +' + perClick.toFixed(2) + ' за тап', 'success');
             } else {
                 showMessage('❌ Недостаточно RB! Нужно: ' + cost, 'error');
             }
         }
 
-        // Обновление интерфейса
         function updateDisplay() {
-            document.getElementById('balance').innerHTML = balance + ' <span>RB</span>';
+            document.getElementById('balance').innerHTML = balance.toFixed(2) + ' <span>RB</span>';
             document.getElementById('clicks').textContent = clicks;
             document.getElementById('level').textContent = level;
-            document.getElementById('perClick').textContent = '+ ' + perClick;
+            document.getElementById('perClick').textContent = '+ ' + perClick.toFixed(2);
         }
 
-        // Сообщение
         function showMessage(text, type) {
             const msg = document.getElementById('message');
             msg.textContent = text;
@@ -402,106 +435,51 @@
 
         // ===== ТАЙМЕР СБРОСА =====
         function updateResetTimer() {
-            const display = document.getElementById('resetTimerDisplay');
-            const fill = document.getElementById('resetProgressFill');
-
-            resetTimeLeft--;
-
-            if (resetTimeLeft <= 0) {
-                // Сброс тапа
-                resetTimeLeft = resetTotalTime;
-                balance = 0;
-                clicks = 0;
-                level = 1;
-                perClick = 1;
-                updateDisplay();
-
-                // Показываем сообщение
-                const msg = document.getElementById('resetMessage');
-                msg.classList.add('show');
-                setTimeout(() => msg.classList.remove('show'), 3000);
-
-                showMessage('🔄 Тап сброшен!', 'error');
-            }
-
-            // Форматирование времени
             const hours = Math.floor(resetTimeLeft / 3600);
             const minutes = Math.floor((resetTimeLeft % 3600) / 60);
             const seconds = resetTimeLeft % 60;
 
-            const timeStr = String(hours).padStart(2, '0') + ':' + 
-                            String(minutes).padStart(2, '0') + ':' + 
-                            String(seconds).padStart(2, '0');
+            const display = document.getElementById('resetTimerDisplay');
+            display.textContent = String(hours).padStart(2, '0') + ':' + 
+                                String(minutes).padStart(2, '0') + ':' + 
+                                String(seconds).padStart(2, '0');
 
-            display.textContent = timeStr;
-
-            // Прогресс-бар
-            const progress = (resetTimeLeft / resetTotalTime) * 100;
-            fill.style.width = progress + '%';
-
-            // Предупреждение за последние 10 секунд
-            if (resetTimeLeft <= 10) {
+            if (resetTimeLeft < 600) {
                 display.classList.add('warning');
             } else {
                 display.classList.remove('warning');
             }
+
+            const progress = (resetTimeLeft / resetTotalTime) * 100;
+            document.getElementById('resetProgressFill').style.width = progress + '%';
+
+            resetTimeLeft--;
+
+            if (resetTimeLeft < 0) {
+                resetGame();
+                resetTimeLeft = resetTotalTime;
+                showResetMessage();
+            }
         }
 
-        // ===== ОГОНЁК =====
-        function spawnFire() {
-            if (fireVisible) return;
-
-            const fire = document.createElement('div');
-            fire.className = 'fire-sticker';
-            fire.textContent = '🔥';
-            fire.id = 'fireSticker';
-
-            fire.style.left = (15 + Math.random() * 70) + '%';
-            fire.style.top = (10 + Math.random() * 70) + '%';
-
-            fire.onclick = function() {
-                boostActive = true;
-                boostTimeLeft = 240; // 4 минуты
-                this.remove();
-                fireVisible = false;
-                fireTimer = 600;
-                document.getElementById('nextFire').textContent = '10:00';
-                showMessage('🔥 БУСТ x2 АКТИВИРОВАН!', 'success');
-            };
-
-            document.body.appendChild(fire);
-            fireVisible = true;
+        function resetGame() {
+            balance = 0.00;
+            clicks = 0;
+            level = 1;
+            perClick = 0.01;
+            updateDisplay();
+            showMessage('🔄 Игра сброшена! Начинаем заново!', 'success');
         }
 
-        // ===== ОБНОВЛЕНИЕ КАЖДУЮ СЕКУНДУ =====
-        setInterval(() => {
-            updateResetTimer(); // Таймер сброса
+        function showResetMessage() {
+            const msg = document.getElementById('resetMessage');
+            msg.classList.add('show');
+            setTimeout(() => msg.classList.remove('show'), 3000);
+        }
 
-            // Огонёк
-            if (fireTimer > 0) {
-                fireTimer--;
-                const minutes = Math.floor(fireTimer / 60);
-                const seconds = fireTimer % 60;
-                document.getElementById('nextFire').textContent = 
-                    String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
-            }
-
-            if (fireTimer === 0 && !fireVisible) {
-                spawnFire();
-            }
-
-            // Буст
-            if (boostActive) {
-                boostTimeLeft--;
-                if (boostTimeLeft <= 0) {
-                    boostActive = false;
-                }
-            }
-        }, 1000);
-
-        // Старт
+        // ===== ЗАПУСК =====
+        setInterval(updateResetTimer, 1000);
         updateDisplay();
-        updateResetTimer();
     </script>
 </body>
 </html>
