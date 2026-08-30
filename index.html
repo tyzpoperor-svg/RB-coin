@@ -3,17 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎮 RB Coin Official - Игра</title>
+    <title>🎮 RB Coin - Игра</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(135deg, #0a0a0a 0%, #000000 50%, #1a1a2e 100%);
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
             min-height: 100vh;
             color: white;
             display: flex;
@@ -22,47 +18,226 @@
             overflow: hidden;
         }
 
-        /* Звёздный фон */
-        .stars-container {
+        /* ===== ТАЙМЕР СБРОСА ===== */
+        .reset-timer {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px 25px;
+            border-radius: 15px;
+            border: 2px solid #f39c12;
+            box-shadow: 0 0 30px rgba(243, 156, 18, 0.4);
+            z-index: 1000;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .reset-timer-label {
+            font-size: 11px;
+            color: #f39c12;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            justify-content: center;
+        }
+
+        .timer-icon { font-size: 16px; animation: spin 4s linear infinite; display: inline-block; }
+
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .reset-timer-display {
+            font-size: 36px;
+            font-weight: 800;
+            color: #f39c12;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 0 15px rgba(243, 156, 18, 0.6);
+            transition: color 0.3s;
+        }
+
+        .reset-timer-display.warning {
+            color: #e74c3c;
+            text-shadow: 0 0 15px rgba(231, 76, 60, 0.6);
+            animation: blink 0.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .reset-progress {
+            width: 200px;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .reset-progress-fill {
             height: 100%;
-            z-index: 0;
+            background: linear-gradient(90deg, #f39c12, #e74c3c);
+            border-radius: 3px;
+            width: 100%;
+            transition: width 1s linear;
+        }
+
+        /* Сообщение о сбросе */
+        .reset-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: rgba(0,0,0,0.95);
+            padding: 40px 60px;
+            border-radius: 20px;
+            z-index: 2000;
+            text-align: center;
+            border: 3px solid #f39c12;
+            box-shadow: 0 0 100px rgba(243, 156, 18, 0.8);
+            transition: transform 0.3s ease;
             pointer-events: none;
         }
 
-        .star {
-            position: absolute;
-            width: 2px;
-            height: 2px;
-            background: white;
-            border-radius: 50%;
-            animation: fall linear infinite;
-            opacity: 0.8;
+        .reset-message.show { transform: translate(-50%, -50%) scale(1); }
+
+        .reset-message-icon { font-size: 70px; margin-bottom: 15px; animation: bounce 0.5s infinite; }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
 
-        .star:nth-child(even) {
-            width: 3px;
-            height: 3px;
-            background: rgba(255, 255, 255, 0.8);
+        .reset-message-title { font-size: 28px; font-weight: bold; color: #f39c12; margin-bottom: 10px; }
+        .reset-message-text { color: #aaa; font-size: 18px; }
+
+        /* ===== ИГРОВОЙ КОНТЕЙНЕР ===== */
+        .game-container {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            z-index: 10;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
         }
 
-        .star:nth-child(3n) {
-            width: 1px;
-            height: 1px;
+        .game-header h1 {
+            font-size: 36px;
+            text-align: center;
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 900;
+            margin-bottom: 20px;
         }
 
-        @keyframes fall {
-            from {
-                transform: translateY(-100px) translateX(0);
-                opacity: 1;
-            }
-            to {
-                transform: translateY(calc(100vh + 100px)) translateX(50px);
-                opacity: 0;
-            }
+        .balance-display {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid rgba(243,156,18,0.3);
+        }
+
+        .balance-label { font-size: 14px; color: #aaa; text-transform: uppercase; letter-spacing: 2px; }
+
+        .balance-amount {
+            font-size: 48px;
+            font-weight: 800;
+            color: #f39c12;
+            margin-top: 5px;
+        }
+
+        .balance-amount span { font-size: 20px; color: #e67e22; }
+
+        .click-button {
+            width: 100%;
+            padding: 25px;
+            font-size: 24px;
+            font-weight: 700;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #e94560, #c23152);
+            color: white;
+            transition: all 0.3s;
+            margin: 20px 0;
+            box-shadow: 0 5px 20px rgba(233,69,96,0.4);
+        }
+
+        .click-button:hover { transform: scale(1.02); }
+        .click-button:active { transform: scale(0.95); }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .stat-item {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .stat-value { font-size: 22px; font-weight: 700; color: #667eea; }
+        .stat-label { font-size: 10px; color: #aaa; margin-top: 5px; }
+        .stat-value.fire-timer { color: #ff4500; }
+
+        .upgrade-button {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102,126,234,0.3);
+        }
+
+        .upgrade-button:hover { transform: translateY(-2px); }
+
+        .message {
+            text-align: center;
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            display: none;
+            font-size: 14px;
+        }
+
+        .message.show { display: block; }
+        .message.success { background: rgba(76,175,80,0.2); color: #4caf50; border: 1px solid rgba(76,175,80,0.3); }
+        .message.error { background: rgba(244,67,54,0.2); color: #f44336; border: 1px solid rgba(244,67,54,0.3); }
+
+        /* Всплывающие цифры */
+        .floating-number {
+            position: fixed;
+            pointer-events: none;
+            font-size: 24px;
+            font-weight: bold;
+            color: #f39c12;
+            text-shadow: 0 0 10px rgba(243,156,18,0.8);
+            animation: floatUp 1s ease-out forwards;
+            z-index: 1000;
+        }
+
+        @keyframes floatUp {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-80px); }
         }
 
         /* Огонёк */
@@ -77,247 +252,60 @@
             align-items: center;
             font-size: 30px;
             cursor: pointer;
-            box-shadow: 0 0 20px rgba(255, 69, 0, 0.8);
+            box-shadow: 0 0 20px rgba(255,69,0,0.8);
             z-index: 100;
-            animation: firePulse 2s ease-in-out infinite;
+            animation: pulse 2s infinite;
             transition: transform 0.3s;
         }
 
-        .fire-sticker:hover {
-            transform: scale(1.2);
-        }
+        .fire-sticker:hover { transform: scale(1.2); }
 
-        @keyframes firePulse {
-            0%, 100% {
-                box-shadow: 0 0 20px rgba(255, 69, 0, 0.8);
-            }
-            50% {
-                box-shadow: 0 0 40px rgba(255, 69, 0, 1);
-            }
-        }
-
-        /* Буст эффект */
-        .boost-active {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(135deg, #ff6b35, #ff4500);
-            padding: 10px 20px;
-            border-radius: 10px;
-            z-index: 200;
-            font-weight: bold;
-            box-shadow: 0 4px 20px rgba(255, 69, 0, 0.5);
-            animation: boostPulse 1s ease-in-out infinite;
-            display: none;
-        }
-
-        .boost-active.show {
-            display: block;
-        }
-
-        @keyframes boostPulse {
-            0%, 100% {
-                transform: translateX(-50%) scale(1);
-            }
-            50% {
-                transform: translateX(-50%) scale(1.1);
-            }
-        }
-
-        .game-container {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 30px;
-            width: 100%;
-            max-width: 500px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-            position: relative;
-            z-index: 10;
-        }
-
-        .game-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .game-header h1 {
-            font-size: 36px;
-            background: linear-gradient(135deg, #f39c12, #e67e22);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-weight: 800;
-        }
-
-        .balance-display {
-            text-align: center;
-            margin: 20px 0;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            border: 2px solid rgba(243, 156, 18, 0.3);
-        }
-
-        .balance-label {
-            font-size: 14px;
-            color: #aaa;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .balance-amount {
-            font-size: 48px;
-            font-weight: 800;
-            color: #f39c12;
-            margin-top: 5px;
-        }
-
-        .balance-amount span {
-            font-size: 20px;
-            color: #e67e22;
-        }
-
-        .click-button {
-            width: 100%;
-            padding: 25px;
-            font-size: 24px;
-            font-weight: 700;
-            border: none;
-            border-radius: 15px;
-            cursor: pointer;
-            background: linear-gradient(135deg, #e94560, #c23152);
-            color: white;
-            transition: all 0.3s;
-            margin: 20px 0;
-            box-shadow: 0 5px 20px rgba(233, 69, 96, 0.4);
-        }
-
-        .click-button:hover {
-            transform: scale(1.02);
-            box-shadow: 0 8px 30px rgba(233, 69, 96, 0.6);
-        }
-
-        .click-button:active {
-            transform: scale(0.95);
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin: 20px 0;
-        }
-
-        .stat-item {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            padding: 10px;
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 22px;
-            font-weight: 700;
-            color: #667eea;
-        }
-
-        .stat-label {
-            font-size: 10px;
-            color: #aaa;
-            margin-top: 5px;
-        }
-
-        .upgrade-button {
-            width: 100%;
-            padding: 15px;
-            font-size: 16px;
-            font-weight: 600;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        .upgrade-button:hover {
-            transform: translateY(-2px);
-        }
-
-        .message {
-            text-align: center;
-            margin-top: 15px;
-            padding: 10px;
-            border-radius: 8px;
-            display: none;
-            font-size: 14px;
-        }
-
-        .message.show {
-            display: block;
-        }
-
-        .message.success {
-            background: rgba(76, 175, 80, 0.2);
-            color: #4caf50;
-            border: 1px solid rgba(76, 175, 80, 0.3);
-        }
-
-        .message.error {
-            background: rgba(244, 67, 54, 0.2);
-            color: #f44336;
-            border: 1px solid rgba(244, 67, 54, 0.3);
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(255,69,0,0.8); }
+            50% { box-shadow: 0 0 40px rgba(255,69,0,1); }
         }
 
         @media (max-width: 480px) {
-            .game-container {
-                margin: 20px;
-                padding: 20px;
-            }
-
-            .balance-amount {
-                font-size: 36px;
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 10px;
-            }
-
-            .stat-value {
-                font-size: 20px;
-            }
+            .game-container { margin: 20px; padding: 20px; }
+            .balance-amount { font-size: 36px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .reset-timer { padding: 10px 15px; }
+            .reset-timer-display { font-size: 24px; }
+            .reset-progress { width: 140px; }
         }
     </style>
 </head>
 <body>
-    <!-- Звёздный фон -->
-    <div class="stars-container" id="starsContainer"></div>
 
-    <!-- Индикатор буста -->
-    <div class="boost-active" id="boostIndicator">
-        🔥 БУСТ x2 АКТИВЕН! Осталось: <span id="boostTime">04:00</span>
+    <!-- Таймер сброса -->
+    <div class="reset-timer">
+        <div class="reset-timer-label">
+            <span class="timer-icon">⏰</span> СБРОС ТАПА
+        </div>
+        <div class="reset-timer-display" id="resetTimerDisplay">01:00:00</div>
+        <div class="reset-progress">
+            <div class="reset-progress-fill" id="resetProgressFill"></div>
+        </div>
+    </div>
+
+    <!-- Сообщение о сбросе -->
+    <div class="reset-message" id="resetMessage">
+        <div class="reset-message-icon">🔄</div>
+        <div class="reset-message-title">ТАП СБРОШЕН!</div>
+        <div class="reset-message-text">Всё начинается заново!</div>
     </div>
 
     <!-- Игровое поле -->
     <div class="game-container">
-        <div class="game-header">
-            <h1>🎮 RB COIN</h1>
-        </div>
+        <div class="game-header"><h1>🎮 RB COIN</h1></div>
 
-        <!-- Баланс -->
         <div class="balance-display">
             <div class="balance-label">Баланс</div>
             <div class="balance-amount" id="balance">0 <span>RB</span></div>
         </div>
 
-        <!-- Кнопка клика -->
-        <button class="click-button" onclick="clickCoin()">👆 КЛИКАЙ!</button>
+        <button class="click-button" onclick="clickCoin(event)">👆 КЛИКАЙ!</button>
 
-        <!-- Статистика -->
         <div class="stats-grid">
             <div class="stat-item">
                 <div class="stat-value" id="clicks">0</div>
@@ -332,55 +320,134 @@
                 <div class="stat-label">За клик</div>
             </div>
             <div class="stat-item">
-                <div class="stat-value" id="nextFire">10:00</div>
+                <div class="stat-value fire-timer" id="nextFire">10:00</div>
                 <div class="stat-label">До огонька</div>
             </div>
         </div>
 
-        <!-- Улучшение -->
         <button class="upgrade-button" onclick="upgrade()">⬆️ Улучшить (100 RB)</button>
-
-        <!-- Сообщения -->
         <div id="message" class="message"></div>
     </div>
 
     <script>
-        // Игровые переменные
+        // ===== ПЕРЕМЕННЫЕ =====
         let balance = 0;
         let clicks = 0;
         let level = 1;
         let perClick = 1;
         let boostActive = false;
         let boostTimeLeft = 0;
-        let fireTimer = 600; // 10 минут = 600 секунд
+        let fireTimer = 600; // 10 минут
         let fireVisible = false;
+        let resetTimeLeft = 3600; // 1 час = 3600 сек
+        let resetTotalTime = 3600;
 
-        // Создание звёзд
-        function createStars() {
-            const container = document.getElementById('starsContainer');
-            const starsCount = 100; // Количество звёзд
+        // ===== ФУНКЦИИ =====
 
-            for (let i = 0; i < starsCount; i++) {
-                const star = document.createElement('div');
-                star.className = 'star';
+        // Клик по кнопке
+        function clickCoin(event) {
+            let earned = perClick * (boostActive ? 2 : 1);
+            balance += earned;
+            clicks++;
 
-                // Случайная позиция и скорость
-                const left = Math.random() * 100;
-                const duration = 5 + Math.random() * 10;
-                const delay = Math.random() * 10;
-                const size = 1 + Math.random() * 2;
+            // Обновление интерфейса
+            updateDisplay();
 
-                star.style.left = left + '%';
-                star.style.animationDuration = duration + 's';
-                star.style.animationDelay = delay + 's';
-                star.style.width = size + 'px';
-                star.style.height = size + 'px';
+            // Всплывающая цифра
+            showFloatingNumber(event.clientX, event.clientY, '+' + earned, boostActive);
+        }
 
-                container.appendChild(star);
+        // Всплывающая цифра
+        function showFloatingNumber(x, y, text, isBoost) {
+            const num = document.createElement('div');
+            num.className = 'floating-number';
+            if (isBoost) num.style.color = '#ff4500';
+            num.textContent = text;
+            num.style.left = x + 'px';
+            num.style.top = y + 'px';
+            document.body.appendChild(num);
+
+            setTimeout(() => num.remove(), 1000);
+        }
+
+        // Улучшение
+        function upgrade() {
+            const cost = 100 * level;
+            if (balance >= cost) {
+                balance -= cost;
+                level++;
+                perClick++;
+                updateDisplay();
+                showMessage('⬆️ Улучшение! +' + perClick + ' за клик', 'success');
+            } else {
+                showMessage('❌ Недостаточно RB! Нужно: ' + cost, 'error');
             }
         }
 
-        // Создание огонька
+        // Обновление интерфейса
+        function updateDisplay() {
+            document.getElementById('balance').innerHTML = balance + ' <span>RB</span>';
+            document.getElementById('clicks').textContent = clicks;
+            document.getElementById('level').textContent = level;
+            document.getElementById('perClick').textContent = '+ ' + perClick;
+        }
+
+        // Сообщение
+        function showMessage(text, type) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = 'message show ' + type;
+            setTimeout(() => msg.className = 'message', 3000);
+        }
+
+        // ===== ТАЙМЕР СБРОСА =====
+        function updateResetTimer() {
+            const display = document.getElementById('resetTimerDisplay');
+            const fill = document.getElementById('resetProgressFill');
+
+            resetTimeLeft--;
+
+            if (resetTimeLeft <= 0) {
+                // Сброс тапа
+                resetTimeLeft = resetTotalTime;
+                balance = 0;
+                clicks = 0;
+                level = 1;
+                perClick = 1;
+                updateDisplay();
+
+                // Показываем сообщение
+                const msg = document.getElementById('resetMessage');
+                msg.classList.add('show');
+                setTimeout(() => msg.classList.remove('show'), 3000);
+
+                showMessage('🔄 Тап сброшен!', 'error');
+            }
+
+            // Форматирование времени
+            const hours = Math.floor(resetTimeLeft / 3600);
+            const minutes = Math.floor((resetTimeLeft % 3600) / 60);
+            const seconds = resetTimeLeft % 60;
+
+            const timeStr = String(hours).padStart(2, '0') + ':' + 
+                            String(minutes).padStart(2, '0') + ':' + 
+                            String(seconds).padStart(2, '0');
+
+            display.textContent = timeStr;
+
+            // Прогресс-бар
+            const progress = (resetTimeLeft / resetTotalTime) * 100;
+            fill.style.width = progress + '%';
+
+            // Предупреждение за последние 10 секунд
+            if (resetTimeLeft <= 10) {
+                display.classList.add('warning');
+            } else {
+                display.classList.remove('warning');
+            }
+        }
+
+        // ===== ОГОНЁК =====
         function spawnFire() {
             if (fireVisible) return;
 
@@ -389,19 +456,16 @@
             fire.textContent = '🔥';
             fire.id = 'fireSticker';
 
-            // Случайная позиция
-            const x = 20 + Math.random() * 60;
-            const y = 10 + Math.random() * 70;
-            fire.style.left = x + '%';
-            fire.style.top = y + '%';
+            fire.style.left = (15 + Math.random() * 70) + '%';
+            fire.style.top = (10 + Math.random() * 70) + '%';
 
-            // Клик по огоньку
             fire.onclick = function() {
-                activateBoost();
+                boostActive = true;
+                boostTimeLeft = 240; // 4 минуты
                 this.remove();
                 fireVisible = false;
-                document.getElementById('nextFire').textContent = '10:00';
                 fireTimer = 600;
+                document.getElementById('nextFire').textContent = '10:00';
                 showMessage('🔥 БУСТ x2 АКТИВИРОВАН!', 'success');
             };
 
@@ -409,109 +473,35 @@
             fireVisible = true;
         }
 
-        // Активация буста
-        function activateBoost() {
-            boostActive = true;
-            boostTimeLeft = 240; // 4 минуты = 240 секунд
-            document.getElementById('boostIndicator').classList.add('show');
-            updateBoostDisplay();
-        }
-
-        // Обновление таймера буста
-        function updateBoostDisplay() {
-            const minutes = Math.floor(boostTimeLeft / 60);
-            const seconds = boostTimeLeft % 60;
-            document.getElementById('boostTime').textContent = 
-                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        }
-
-        // Функция клика
-        function clickCoin() {
-            const gain = boostActive ? perClick * 2 : perClick;
-            balance += gain;
-            clicks++;
-            updateUI();
-
-            // Анимация
-            const button = document.querySelector('.click-button');
-            button.style.transform = 'scale(0.9)';
-            setTimeout(() => {
-                button.style.transform = 'scale(1)';
-            }, 100);
-
-            // Визуальный эффект при бусте
-            if (boostActive) {
-                button.style.boxShadow = '0 0 30px rgba(255, 69, 0, 0.8)';
-                setTimeout(() => {
-                    button.style.boxShadow = '';
-                }, 200);
-            }
-        }
-
-        // Функция улучшения
-        function upgrade() {
-            const cost = level * 100;
-            if (balance >= cost) {
-                balance -= cost;
-                level++;
-                perClick = level;
-                updateUI();
-                showMessage('✅ Уровень повышен!', 'success');
-            } else {
-                showMessage(`❌ Нужно ${cost} RB`, 'error');
-            }
-        }
-
-        // Обновление интерфейса
-        function updateUI() {
-            document.getElementById('balance').innerHTML = `${balance} <span>RB</span>`;
-            document.getElementById('clicks').textContent = clicks;
-            document.getElementById('level').textContent = level;
-            document.getElementById('perClick').textContent = `+${perClick}`;
-        }
-
-        // Показ сообщений
-        function showMessage(text, type) {
-            const msg = document.getElementById('message');
-            msg.textContent = text;
-            msg.className = `message show ${type}`;
-            setTimeout(() => {
-                msg.className = 'message';
-            }, 2000);
-        }
-
-        // Главный таймер
+        // ===== ОБНОВЛЕНИЕ КАЖДУЮ СЕКУНДУ =====
         setInterval(() => {
-            // Таймер огонька
-            if (!fireVisible && fireTimer > 0) {
+            updateResetTimer(); // Таймер сброса
+
+            // Огонёк
+            if (fireTimer > 0) {
                 fireTimer--;
                 const minutes = Math.floor(fireTimer / 60);
                 const seconds = fireTimer % 60;
                 document.getElementById('nextFire').textContent = 
-                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-
-                // Спавн огонька через 10 минут
-                if (fireTimer === 0) {
-                    spawnFire();
-                }
+                    String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
             }
 
-            // Таймер буста
-            if (boostActive && boostTimeLeft > 0) {
-                boostTimeLeft--;
-                updateBoostDisplay();
+            if (fireTimer === 0 && !fireVisible) {
+                spawnFire();
+            }
 
-                if (boostTimeLeft === 0) {
+            // Буст
+            if (boostActive) {
+                boostTimeLeft--;
+                if (boostTimeLeft <= 0) {
                     boostActive = false;
-                    document.getElementById('boostIndicator').classList.remove('show');
-                    showMessage('⏰ Буст закончился!', 'error');
                 }
             }
         }, 1000);
 
-        // Загрузка игры
-        createStars();
-        updateUI();
+        // Старт
+        updateDisplay();
+        updateResetTimer();
     </script>
 </body>
 </html>
