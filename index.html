@@ -3,483 +3,302 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎮 RB Coin - Игра</title>
+    <title>RB Coin - Зарабатывай монеты!</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            color: white;
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
-            user-select: none;
-        }
-
-        /* Таймер сброса */
-        .reset-timer {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.9);
-            padding: 15px 25px;
-            border-radius: 15px;
-            border: 2px solid #f39c12;
-            box-shadow: 0 0 30px rgba(243, 156, 18, 0.4);
-            z-index: 1000;
-            text-align: center;
-            backdrop-filter: blur(10px);
-        }
-
-        .reset-timer-label {
-            font-size: 11px;
-            color: #f39c12;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            font-weight: bold;
-            margin-bottom: 5px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            justify-content: center;
-        }
-
-        .timer-icon { font-size: 16px; animation: spin 4s linear infinite; display: inline-block; }
-
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-        .reset-timer-display {
-            font-size: 36px;
-            font-weight: 800;
-            color: #f39c12;
-            font-family: 'Courier New', monospace;
-            text-shadow: 0 0 15px rgba(243, 156, 18, 0.6);
-            transition: color 0.3s;
-        }
-
-        .reset-timer-display.warning {
-            color: #e74c3c;
-            text-shadow: 0 0 15px rgba(231, 76, 60, 0.6);
-            animation: blink 0.5s infinite;
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        .reset-progress {
-            width: 200px;
-            height: 6px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 3px;
-            margin-top: 10px;
-            overflow: hidden;
-        }
-
-        .reset-progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #f39c12, #e74c3c);
-            border-radius: 3px;
-            width: 100%;
-            transition: width 1s linear;
-        }
-
-        /* Сообщение о сбросе */
-        .reset-message {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0);
-            background: rgba(0,0,0,0.95);
-            padding: 40px 60px;
-            border-radius: 20px;
-            z-index: 2000;
-            text-align: center;
-            border: 3px solid #f39c12;
-            box-shadow: 0 0 100px rgba(243, 156, 18, 0.8);
-            transition: transform 0.3s ease;
-            pointer-events: none;
-        }
-
-        .reset-message.show { transform: translate(-50%, -50%) scale(1); }
-
-        .reset-message-icon { font-size: 70px; margin-bottom: 15px; animation: bounce 0.5s infinite; }
-
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        .reset-message-title { font-size: 28px; font-weight: bold; color: #f39c12; margin-bottom: 10px; }
-        .reset-message-text { color: #aaa; font-size: 18px; }
-
-        /* Игровой контейнер */
-        .game-container {
-            background: rgba(255,255,255,0.1);
-            border-radius: 20px;
-            padding: 30px;
-            width: 100%;
-            max-width: 500px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.2);
-            z-index: 10;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-        }
-
-        .game-header h1 {
-            font-size: 36px;
-            text-align: center;
-            background: linear-gradient(135deg, #f39c12, #e67e22);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-weight: 900;
-            margin-bottom: 20px;
-        }
-
-        .balance-display {
-            background: rgba(255,255,255,0.05);
-            border-radius: 15px;
             padding: 20px;
-            text-align: center;
-            border: 2px solid rgba(243,156,18,0.3);
         }
 
-        .balance-label { font-size: 14px; color: #aaa; text-transform: uppercase; letter-spacing: 2px; }
-
-        .balance-amount {
-            font-size: 48px;
-            font-weight: 800;
-            color: #f39c12;
-            margin-top: 5px;
-        }
-
-        .balance-amount span { font-size: 20px; color: #e67e22; }
-
-        /* МОНЕТА С ФОТО */
-        .coin-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 30px 0;
-            perspective: 1000px;
-        }
-
-        .coin {
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            background: radial-gradient(circle at 35% 35%, #ffd700, #ffa500 60%, #ff8c00);
-            border: 8px solid #daa520;
-            cursor: pointer;
-            position: relative;
-            transition: transform 0.1s;
-            box-shadow: 
-                0 0 40px rgba(255, 215, 0, 0.5),
-                inset 0 -10px 20px rgba(0,0,0,0.2),
-                inset 0 10px 20px rgba(255,255,255,0.3);
-            animation: coinFloat 3s ease-in-out infinite;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .coin-photo {
-            width: 80%;
-            height: 80%;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-
-        .coin:hover {
-            transform: scale(1.05);
-            box-shadow: 
-                0 0 60px rgba(255, 215, 0, 0.8),
-                inset 0 -10px 20px rgba(0,0,0,0.2),
-                inset 0 10px 20px rgba(255,255,255,0.3);
-        }
-
-        .coin:active {
-            transform: scale(0.9);
-        }
-
-        .coin-bounce {
-            animation: coinBounce 0.3s ease;
-        }
-
-        @keyframes coinFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        @keyframes coinBounce {
-            0% { transform: scale(1); }
-            50% { transform: scale(0.85); }
-            100% { transform: scale(1); }
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin: 20px 0;
-        }
-
-        .stat-item {
-            background: rgba(255,255,255,0.05);
-            border-radius: 10px;
-            padding: 10px;
-            text-align: center;
-        }
-
-        .stat-value { font-size: 22px; font-weight: 700; color: #667eea; }
-        .stat-label { font-size: 10px; color: #aaa; margin-top: 5px; }
-
-        .upgrade-button {
+        .container {
+            max-width: 400px;
             width: 100%;
-            padding: 15px;
-            font-size: 16px;
-            font-weight: 600;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(102,126,234,0.3);
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
         }
 
-        .upgrade-button:hover { transform: translateY(-2px); }
+        .coin-logo {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 20px;
+            display: block;
+            border-radius: 50%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
 
-        .message {
-            text-align: center;
-            margin-top: 15px;
-            padding: 10px;
-            border-radius: 8px;
-            display: none;
+        h1 {
+            color: #333;
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .tagline {
+            color: #666;
+            margin-bottom: 30px;
             font-size: 14px;
         }
 
-        .message.show { display: block; }
-        .message.success { background: rgba(76,175,80,0.2); color: #4caf50; border: 1px solid rgba(76,175,80,0.3); }
-        .message.error { background: rgba(244,67,54,0.2); color: #f44336; border: 1px solid rgba(244,67,54,0.3); }
-
-        /* Всплывающие цифры */
-        .floating-number {
-            position: fixed;
-            pointer-events: none;
-            font-size: 24px;
-            font-weight: bold;
-            color: #f39c12;
-            text-shadow: 0 0 10px rgba(243,156,18,0.8);
-            animation: floatUp 1s ease-out forwards;
-            z-index: 1000;
+        .counter {
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.3);
         }
 
-        @keyframes floatUp {
-            from { opacity: 1; transform: translateY(0); }
-            to { opacity: 0; transform: translateY(-80px); }
+        .counter-label {
+            color: #8B6914;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 5px;
         }
 
-        @media (max-width: 480px) {
-            .game-container { margin: 20px; padding: 20px; }
-            .balance-amount { font-size: 36px; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .reset-timer { padding: 10px 15px; }
-            .reset-timer-display { font-size: 24px; }
-            .reset-progress { width: 140px; }
-            .coin { width: 150px; height: 150px; }
-            .coin-photo { width: 75%; height: 75%; }
+        #coinCount {
+            font-size: 48px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .mine-btn {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+            margin-bottom: 15px;
+            width: 100%;
+        }
+
+        .mine-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(76, 175, 80, 0.5);
+        }
+
+        .mine-btn:active {
+            transform: scale(0.95);
+        }
+
+        .status {
+            color: #888;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+
+        .referral-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .referral-title {
+            color: #333;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .referral-link {
+            background: white;
+            border: 2px solid #4CAF50;
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 12px;
+            color: #333;
+            word-break: break-all;
+            margin-bottom: 10px;
+            user-select: all;
+        }
+
+        .copy-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: transform 0.2s;
+            width: 100%;
+        }
+
+        .copy-btn:hover {
+            transform: scale(1.02);
+        }
+
+        .tg-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #0088cc, #0077b5);
+            color: white;
+            text-decoration: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 5px 15px rgba(0, 136, 204, 0.4);
+        }
+
+        .tg-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(0, 136, 204, 0.5);
+        }
+
+        .referral-bonus {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .footer {
+            margin-top: 20px;
+            color: #999;
+            font-size: 12px;
         }
     </style>
 </head>
 <body>
+    <div class="container">
+        <img src="rbcoin.png" alt="RB Coin Logo" class="coin-logo" id="coinLogo">
 
-    <!-- Таймер сброса -->
-    <div class="reset-timer">
-        <div class="reset-timer-label">
-            <span class="timer-icon">⏰</span> СБРОС ТАПА
-        </div>
-        <div class="reset-timer-display" id="resetTimerDisplay">01:00:00</div>
-        <div class="reset-progress">
-            <div class="reset-progress-fill" id="resetProgressFill"></div>
-        </div>
-    </div>
+        <h1>🪙 RB COIN</h1>
+        <p class="tagline">Зарабатывай монеты кликами!</p>
 
-    <!-- Сообщение о сбросе -->
-    <div class="reset-message" id="resetMessage">
-        <div class="reset-message-icon">🔄</div>
-        <div class="reset-message-title">ТАП СБРОШЕН!</div>
-        <div class="reset-message-text">Всё начинается заново!</div>
-    </div>
-
-    <!-- Игровое поле -->
-    <div class="game-container">
-        <div class="game-header"><h1>🎮 RB COIN</h1></div>
-
-        <div class="balance-display">
-            <div class="balance-label">Баланс</div>
-            <div class="balance-amount" id="balance">0.00 <span>RB</span></div>
+        <div class="counter">
+            <div class="counter-label">Твои монеты:</div>
+            <div id="coinCount">0</div>
         </div>
 
-        <!-- МОНЕТА С ВАШИМ ФОТО -->
-        <div class="coin-container">
-            <div class="coin" id="coin" onclick="tapCoin(event)">
-                <!-- ЗАМЕНИТЕ ССЫЛКУ НА ВАШЕ ФОТО -->
-                <img src="https://via.placeholder.com/200" alt="Ваше фото" class="coin-photo" id="coinPhoto">
-            </div>
+        <button class="mine-btn" onclick="mineCoin()">⛏️ Добыть монету</button>
+        <p class="status" id="status"></p>
+
+        <div class="referral-bonus">
+            🎁 Приглашай друзей и получай <strong>100 монет</strong> за каждого!
         </div>
 
-        <div class="stats-grid">
-            <div class="stat-item">
-                <div class="stat-value" id="clicks">0</div>
-                <div class="stat-label">Клики</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="level">1</div>
-                <div class="stat-label">Уровень</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="perClick">0.01</div>
-                <div class="stat-label">За тап</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="nextFire">10:00</div>
-                <div class="stat-label">До огонька</div>
-            </div>
+        <div class="referral-section">
+            <div class="referral-title">👥 Твоя реферальная ссылка:</div>
+            <div class="referral-link" id="referralLink">https://tyzpopero-svg.github.io/RB-coin/?ref=your_id</div>
+            <button class="copy-btn" onclick="copyReferralLink()">📋 Скопировать ссылку</button>
         </div>
 
-        <button class="upgrade-button" onclick="upgrade()">⬆️ Улучшить (100 RB)</button>
-        <div id="message" class="message"></div>
+        <a href="https://t.me/+ciz2RtMWH9MzMzUy" target="_blank" class="tg-btn">
+            📢 Наш Telegram канал
+        </a>
+
+        <p class="footer">© 2026 RB Coin. Все права защищены.</p>
     </div>
 
     <script>
-        // ===== ПЕРЕМЕННЫЕ =====
-        let balance = 0.00;
-        let clicks = 0;
-        let level = 1;
-        let perClick = 0.01;
-        let resetTimeLeft = 3600;
-        let resetTotalTime = 3600;
+        // Баланс монет
+        let coins = localStorage.getItem('rb_coins') || 0;
+        coins = parseInt(coins);
+        document.getElementById('coinCount').textContent = coins;
 
-        const TAP_DELAY = 300;
-        let lastTapTime = 0;
+        // Проверка реферальной ссылки
+        const urlParams = new URLSearchParams(window.location.search);
+        const ref = urlParams.get('ref');
 
-        // ===== ФУНКЦИИ =====
+        if (ref && !localStorage.getItem('rb_ref_' + ref)) {
+            // Добавляем 100 монет за реферала
+            coins += 100;
+            localStorage.setItem('rb_coins', coins);
+            localStorage.setItem('rb_ref_' + ref, 'true');
+            document.getElementById('coinCount').textContent = coins;
+            alert('🎉 Ты получил 100 монет за переход по реферальной ссылке!');
+        }
 
-        // Тап по монете
-        function tapCoin(event) {
+        // Функция добычи монет
+        let mining = false;
+        let clickCount = 0;
+        let lastClickTime = 0;
+
+        function mineCoin() {
             const now = Date.now();
+            const timeDiff = now - lastClickTime;
 
-            if (now - lastTapTime < TAP_DELAY) {
-                showFloatingNumber(event.clientX, event.clientY, '⏳', false);
+            // Минимальное время между кликами - 2 секунды
+            if (timeDiff < 2000) {
+                document.getElementById('status').textContent = '⏳ Подожди 2 секунды перед следующим кликом!';
                 return;
             }
-            lastTapTime = now;
 
-            balance = parseFloat((balance + perClick).toFixed(2));
-            clicks++;
+            lastClickTime = now;
 
-            const coin = document.getElementById('coin');
-            coin.classList.add('coin-bounce');
-            setTimeout(() => coin.classList.remove('coin-bounce'), 300);
+            // Увеличиваем счётчик кликов
+            clickCount++;
 
-            updateDisplay();
-            showFloatingNumber(event.clientX, event.clientY, '+' + perClick.toFixed(2), false);
-        }
-
-        function showFloatingNumber(x, y, text, isBoost) {
-            const num = document.createElement('div');
-            num.className = 'floating-number';
-            if (isBoost) num.style.color = '#ff4500';
-            if (text === '⏳') num.style.color = '#ff4444';
-            num.textContent = text;
-            num.style.left = x + 'px';
-            num.style.top = y + 'px';
-            document.body.appendChild(num);
-            setTimeout(() => num.remove(), 1000);
-        }
-
-        function upgrade() {
-            const cost = 100 * level;
-            if (balance >= cost) {
-                balance -= cost;
-                level++;
-                perClick = parseFloat((perClick + 0.01).toFixed(2));
-                updateDisplay();
-                showMessage('⬆️ Улучшение! +' + perClick.toFixed(2) + ' за тап', 'success');
+            // Каждый 3-й клик даёт монету
+            if (clickCount % 3 === 0) {
+                coins += 1;
+                localStorage.setItem('rb_coins', coins);
+                document.getElementById('coinCount').textContent = coins;
+                document.getElementById('status').textContent = '✅ +1 монета!';
             } else {
-                showMessage('❌ Недостаточно RB! Нужно: ' + cost, 'error');
-            }
-        }
-
-        function updateDisplay() {
-            document.getElementById('balance').innerHTML = balance.toFixed(2) + ' <span>RB</span>';
-            document.getElementById('clicks').textContent = clicks;
-            document.getElementById('level').textContent = level;
-            document.getElementById('perClick').textContent = '+ ' + perClick.toFixed(2);
-        }
-
-        function showMessage(text, type) {
-            const msg = document.getElementById('message');
-            msg.textContent = text;
-            msg.className = 'message show ' + type;
-            setTimeout(() => msg.className = 'message', 3000);
-        }
-
-        // ===== ТАЙМЕР СБРОСА =====
-        function updateResetTimer() {
-            const hours = Math.floor(resetTimeLeft / 3600);
-            const minutes = Math.floor((resetTimeLeft % 3600) / 60);
-            const seconds = resetTimeLeft % 60;
-
-            const display = document.getElementById('resetTimerDisplay');
-            display.textContent = String(hours).padStart(2, '0') + ':' + 
-                                String(minutes).padStart(2, '0') + ':' + 
-                                String(seconds).padStart(2, '0');
-
-            if (resetTimeLeft < 600) {
-                display.classList.add('warning');
-            } else {
-                display.classList.remove('warning');
+                document.getElementById('status').textContent = `⏳ Ещё ${3 - (clickCount % 3)} клика до монеты...`;
             }
 
-            const progress = (resetTimeLeft / resetTotalTime) * 100;
-            document.getElementById('resetProgressFill').style.width = progress + '%';
-
-            resetTimeLeft--;
-
-            if (resetTimeLeft < 0) {
-                resetGame();
-                resetTimeLeft = resetTotalTime;
-                showResetMessage();
-            }
+            // Анимация кнопки
+            const btn = document.querySelector('.mine-btn');
+            btn.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                btn.style.transform = 'scale(1)';
+            }, 100);
         }
 
-        function resetGame() {
-            balance = 0.00;
-            clicks = 0;
-            level = 1;
-            perClick = 0.01;
-            updateDisplay();
-            showMessage('🔄 Игра сброшена! Начинаем заново!', 'success');
+        // Обновляем реферальную ссылку
+        const userId = localStorage.getItem('rb_user_id') || Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('rb_user_id', userId);
+        document.getElementById('referralLink').textContent = 
+            `https://tyzpopero-svg.github.io/RB-coin/?ref=${userId}`;
+
+        // Копирование реферальной ссылки
+        function copyReferralLink() {
+            const link = document.getElementById('referralLink').textContent;
+            navigator.clipboard.writeText(link).then(() => {
+                alert('✅ Ссылка скопирована! Отправь её друзьям и получай монеты!');
+            }).catch(() => {
+                // Fallback
+                const textarea = document.createElement('textarea');
+                textarea.value = link;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('✅ Ссылка скопирована!');
+            });
         }
 
-        function showResetMessage() {
-            const msg = document.getElementById('resetMessage');
-            msg.classList.add('show');
-            setTimeout(() => msg.classList.remove('show'), 3000);
+        // Функция для обновления монет на странице
+        function updateCoins() {
+            document.getElementById('coinCount').textContent = coins;
         }
-
-        // ===== ЗАПУСК =====
-        setInterval(updateResetTimer, 1000);
-        updateDisplay();
     </script>
 </body>
 </html>
