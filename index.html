@@ -13,52 +13,83 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Анимированные звёзды */
+        .stars-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .star {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: #fff;
+            border-radius: 50%;
+            animation: fall linear infinite;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes fall {
+            from {
+                transform: translateY(-100%);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(100vh);
+                opacity: 0;
+            }
         }
 
         .container {
             max-width: 400px;
             width: 100%;
-            background: rgba(255, 255, 255, 0.95);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
             border-radius: 25px;
             padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
             text-align: center;
-        }
-
-        .coin-logo {
-            width: 120px;
-            height: 120px;
-            margin: 0 auto 20px;
-            display: block;
-            border-radius: 50%;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 1;
         }
 
         h1 {
-            color: #333;
-            font-size: 32px;
+            color: #fff;
+            font-size: 36px;
             margin-bottom: 10px;
-            font-weight: 800;
-            letter-spacing: 1px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
         }
 
         .tagline {
-            color: #666;
-            margin-bottom: 30px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 25px;
             font-size: 14px;
         }
 
         .counter {
             background: linear-gradient(135deg, #ffd700, #ffaa00);
             border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 25px;
+            padding: 15px;
+            margin-bottom: 20px;
             box-shadow: 0 5px 20px rgba(255, 215, 0, 0.3);
         }
 
@@ -70,62 +101,103 @@
         }
 
         #coinCount {
-            font-size: 48px;
+            font-size: 42px;
             font-weight: 900;
             color: #fff;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
 
-        .mine-btn {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            font-size: 18px;
-            font-weight: 700;
-            border-radius: 50px;
+        /* Кликабельная монета */
+        .coin-container {
+            position: relative;
+            margin: 20px auto;
+            width: 200px;
+            height: 200px;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
-            margin-bottom: 15px;
-            width: 100%;
         }
 
-        .mine-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 7px 20px rgba(76, 175, 80, 0.5);
+        .coin {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            transition: transform 0.1s;
+            user-select: none;
+            -webkit-user-drag: none;
         }
 
-        .mine-btn:active {
-            transform: scale(0.95);
+        .coin:active {
+            transform: scale(0.85);
+        }
+
+        .coin-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.3) 0%, transparent 70%);
+            animation: glow 2s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes glow {
+            0%, 100% {
+                opacity: 0.5;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+        }
+
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            height: 10px;
+            overflow: hidden;
+            margin: 15px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #ffd700, #ffaa00);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
         }
 
         .status {
-            color: #888;
-            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
             margin-bottom: 20px;
+            min-height: 20px;
         }
 
         .referral-section {
-            background: #f8f9fa;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 15px;
             padding: 20px;
             margin-bottom: 20px;
         }
 
         .referral-title {
-            color: #333;
+            color: #fff;
             font-weight: 700;
             margin-bottom: 10px;
+            font-size: 16px;
         }
 
         .referral-link {
-            background: white;
-            border: 2px solid #4CAF50;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 10px;
             padding: 10px;
             font-size: 12px;
-            color: #333;
+            color: #fff;
             word-break: break-all;
             margin-bottom: 10px;
             user-select: all;
@@ -159,6 +231,7 @@
             font-size: 16px;
             transition: transform 0.2s, box-shadow 0.2s;
             box-shadow: 0 5px 15px rgba(0, 136, 204, 0.4);
+            margin-top: 10px;
         }
 
         .tg-btn:hover {
@@ -167,7 +240,8 @@
         }
 
         .referral-bonus {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.3), rgba(69, 160, 73, 0.3));
+            border: 1px solid rgba(76, 175, 80, 0.5);
             color: white;
             border-radius: 10px;
             padding: 10px;
@@ -178,25 +252,60 @@
 
         .footer {
             margin-top: 20px;
-            color: #999;
+            color: rgba(255, 255, 255, 0.5);
             font-size: 12px;
+        }
+
+        .particles {
+            position: absolute;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .particle {
+            position: absolute;
+            font-size: 24px;
+            animation: particleFloat 1s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-50px) scale(0.5);
+                opacity: 0;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <img src="rbcoin.png" alt="RB Coin Logo" class="coin-logo" id="coinLogo">
+    <!-- Звёздный фон -->
+    <div class="stars-container" id="starsContainer"></div>
 
+    <div class="container">
         <h1>🪙 RB COIN</h1>
-        <p class="tagline">Зарабатывай монеты кликами!</p>
+        <p class="tagline">Тапай по монете и зарабатывай!</p>
 
         <div class="counter">
             <div class="counter-label">Твои монеты:</div>
             <div id="coinCount">0</div>
         </div>
 
-        <button class="mine-btn" onclick="mineCoin()">⛏️ Добыть монету</button>
-        <p class="status" id="status"></p>
+        <!-- Кликабельная монета -->
+        <div class="coin-container" onclick="mineCoin(event)">
+            <div class="coin-glow"></div>
+            <img src="rbcoin.png" alt="RB Coin" class="coin" id="coin">
+        </div>
+
+        <!-- Прогресс до следующей монеты -->
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <p class="status" id="status">Тапай по монете!</p>
 
         <div class="referral-bonus">
             🎁 Приглашай друзей и получай <strong>100 монет</strong> за каждого!
@@ -226,7 +335,6 @@
         const ref = urlParams.get('ref');
 
         if (ref && !localStorage.getItem('rb_ref_' + ref)) {
-            // Добавляем 100 монет за реферала
             coins += 100;
             localStorage.setItem('rb_coins', coins);
             localStorage.setItem('rb_ref_' + ref, 'true');
@@ -234,42 +342,96 @@
             alert('🎉 Ты получил 100 монет за переход по реферальной ссылке!');
         }
 
+        // Создание звёзд
+        function createStars() {
+            const container = document.getElementById('starsContainer');
+            for (let i = 0; i < 50; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.animationDuration = (Math.random() * 5 + 3) + 's';
+                star.style.animationDelay = Math.random() * 5 + 's';
+                star.style.width = (Math.random() * 4 + 2) + 'px';
+                star.style.height = star.style.width;
+                container.appendChild(star);
+            }
+        }
+
+        createStars();
+
         // Функция добычи монет
-        let mining = false;
         let clickCount = 0;
         let lastClickTime = 0;
+        const CLICKS_NEEDED = 5; // 5 кликов для монеты
+        const COOLDOWN = 5000; // 5 секунд между кликами
 
-        function mineCoin() {
+        function mineCoin(event) {
             const now = Date.now();
             const timeDiff = now - lastClickTime;
 
-            // Минимальное время между кликами - 2 секунды
-            if (timeDiff < 2000) {
-                document.getElementById('status').textContent = '⏳ Подожди 2 секунды перед следующим кликом!';
+            // Проверка кулдауна
+            if (timeDiff < COOLDOWN) {
+                const secondsLeft = Math.ceil((COOLDOWN - timeDiff) / 1000);
+                document.getElementById('status').textContent = `⏳ Подожди ${secondsLeft} сек...`;
                 return;
             }
 
             lastClickTime = now;
 
+            // Анимация монеты
+            const coin = document.getElementById('coin');
+            coin.style.transform = 'scale(0.85)';
+            setTimeout(() => {
+                coin.style.transform = 'scale(1)';
+            }, 100);
+
+            // Создание частиц
+            if (event) {
+                createParticles(event.clientX, event.clientY);
+            }
+
             // Увеличиваем счётчик кликов
             clickCount++;
 
-            // Каждый 3-й клик даёт монету
-            if (clickCount % 3 === 0) {
+            // Обновляем прогресс
+            const progress = ((clickCount % CLICKS_NEEDED) / CLICKS_NEEDED) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+
+            // Каждый 5-й клик даёт монету
+            if (clickCount % CLICKS_NEEDED === 0) {
                 coins += 1;
                 localStorage.setItem('rb_coins', coins);
                 document.getElementById('coinCount').textContent = coins;
                 document.getElementById('status').textContent = '✅ +1 монета!';
+                document.getElementById('progressFill').style.width = '0%';
             } else {
-                document.getElementById('status').textContent = `⏳ Ещё ${3 - (clickCount % 3)} клика до монеты...`;
+                const clicksLeft = CLICKS_NEEDED - (clickCount % CLICKS_NEEDED);
+                document.getElementById('status').textContent = `⏳ Ещё ${clicksLeft} кликов до монеты...`;
+            }
+        }
+
+        // Создание частиц при клике
+        function createParticles(x, y) {
+            const container = document.querySelector('.container');
+            const rect = container.getBoundingClientRect();
+            const particleContainer = document.createElement('div');
+            particleContainer.className = 'particles';
+            particleContainer.style.left = (x - rect.left) + 'px';
+            particleContainer.style.top = (y - rect.top) + 'px';
+
+            for (let i = 0; i < 5; i++) {
+                const particle = document.createElement('span');
+                particle.className = 'particle';
+                particle.textContent = '✨';
+                particle.style.left = (Math.random() - 0.5) * 40 + 'px';
+                particle.style.animationDelay = Math.random() * 0.2 + 's';
+                particleContainer.appendChild(particle);
             }
 
-            // Анимация кнопки
-            const btn = document.querySelector('.mine-btn');
-            btn.style.transform = 'scale(0.9)';
+            container.appendChild(particleContainer);
             setTimeout(() => {
-                btn.style.transform = 'scale(1)';
-            }, 100);
+                particleContainer.remove();
+            }, 1000);
         }
 
         // Обновляем реферальную ссылку
@@ -284,7 +446,6 @@
             navigator.clipboard.writeText(link).then(() => {
                 alert('✅ Ссылка скопирована! Отправь её друзьям и получай монеты!');
             }).catch(() => {
-                // Fallback
                 const textarea = document.createElement('textarea');
                 textarea.value = link;
                 document.body.appendChild(textarea);
@@ -293,11 +454,6 @@
                 document.body.removeChild(textarea);
                 alert('✅ Ссылка скопирована!');
             });
-        }
-
-        // Функция для обновления монет на странице
-        function updateCoins() {
-            document.getElementById('coinCount').textContent = coins;
         }
     </script>
 </body>
