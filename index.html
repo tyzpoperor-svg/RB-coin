@@ -1,1343 +1,967 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Geek Coin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тапалка | GeekBot</title>
     <style>
-        /* ====== БАЗОВЫЕ СТИЛИ ====== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+/* ====== ОСНОВНЫЕ СТИЛИ ====== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-        body {
-            background: linear-gradient(180deg, #2c3e50 0%, #3498db 100%);
-            min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: white;
-            overflow: hidden;
-            touch-action: none;
-        }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0a0a1a;
+    color: #fff;
+    overflow: hidden;
+    height: 100vh;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
 
-        /* ====== ШАПКА ====== */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 20px 10px;
-            background: rgba(0, 0, 0, 0.3);
-        }
+/* ====== ОСНОВНОЙ КОНТЕЙНЕР ====== */
+#mainScreen {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 50%, #16213e 100%);
+}
 
-        .header .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+/* ====== ШАПКА ====== */
+.header {
+    padding: 15px 20px;
+    padding-top: 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(10, 10, 26, 0.8);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
 
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #2ecc71;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 20px;
-        }
+.header-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #8b8b9e;
+}
 
-        .user-name {
-            font-weight: bold;
-            font-size: 16px;
-        }
+.header-value {
+    font-weight: bold;
+    color: #ffd700;
+    font-size: 16px;
+}
 
-        .stats {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
+/* ====== БАЛАНС ====== */
+.balance-container {
+    text-align: center;
+    padding: 20px 20px 5px;
+}
 
-        .stat-item {
-            text-align: center;
-        }
+.balance-title {
+    color: #8b8b9e;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 5px;
+}
 
-        .stat-label {
-            font-size: 12px;
-            opacity: 0.8;
-        }
+.balance-value {
+    font-size: 36px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+}
 
-        .stat-value {
-            font-size: 18px;
-            font-weight: bold;
-        }
+.level-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    margin-top: 8px;
+    font-weight: 600;
+}
 
-        /* ====== БАЛАНС ====== */
-        .balance-section {
-            text-align: center;
-            padding: 15px 20px;
-        }
+/* ====== КОНТЕЙНЕР МОНЕТЫ ====== */
+.coin-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
 
-        .balance {
-            font-size: 42px;
-            font-weight: bold;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-        }
+.coin {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #ffd700, #ffaa00, #cc8800);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 
+        0 0 40px rgba(255, 215, 0, 0.4),
+        inset 0 0 20px rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: transform 0.1s;
+    position: relative;
+    animation: coinIdle 2s ease-in-out infinite;
+}
 
-        .balance-label {
-            font-size: 14px;
-            opacity: 0.8;
-            margin-top: 5px;
-        }
+.coin::before {
+    content: '';
+    position: absolute;
+    inset: 10px;
+    border: 3px solid #aa7700;
+    border-radius: 50%;
+}
 
-        /* ====== КОНТЕЙНЕР МОНЕТЫ ====== */
-        .coin-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px 0;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-            -webkit-user-select: none;
-            position: relative;
-            min-height: 300px;
-        }
+.coin:active {
+    transform: scale(0.95);
+}
 
-        .coin {
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            background: linear-gradient(145deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%);
-            box-shadow: 
-                0 10px 40px rgba(255, 215, 0, 0.4),
-                inset 0 -10px 20px rgba(255, 140, 0, 0.3),
-                inset 0 10px 20px rgba(255, 255, 255, 0.3);
-            position: relative;
-            transition: transform 0.1s ease;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            animation: coinPulse 2s ease-in-out infinite;
-        }
+.coin-icon {
+    font-size: 80px;
+    filter: drop-shadow(0 2px 10px rgba(0,0,0,0.3));
+}
 
-        .coin::before {
-            content: '';
-            position: absolute;
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            border: 3px solid rgba(255, 255, 255, 0.5);
-            box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.3);
-        }
+@keyframes coinIdle {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
 
-        .coin::after {
-            content: '💰';
-            font-size: 60px;
-            text-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
-        }
+/* ====== ЭНЕРГИЯ ====== */
+.energy-container {
+    padding: 15px 20px;
+    background: rgba(10, 10, 26, 0.8);
+}
 
-        .coin:active {
-            transform: scale(0.92);
-            box-shadow: 
-                0 5px 20px rgba(255, 215, 0, 0.3),
-                inset 0 -5px 10px rgba(255, 140, 0, 0.3),
-                inset 0 5px 10px rgba(255, 255, 255, 0.3);
-        }
+.energy-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: #8b8b9e;
+}
 
-        /* Анимация тапа */
-        .tap-animation {
-            position: absolute;
-            font-size: 20px;
-            font-weight: bold;
-            color: #FFD700;
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-            pointer-events: none;
-            animation: tapFloat 1s ease-out forwards;
-            z-index: 10;
-        }
+.energy-bar {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+}
 
-        @keyframes tapFloat {
-            0% {
-                transform: translateY(0) scale(0.5);
-                opacity: 1;
-            }
-            100% {
-                transform: translateY(-80px) scale(1.5);
-                opacity: 0;
-            }
-        }
+.energy-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4fc3f7, #29b6f6);
+    border-radius: 10px;
+    transition: width 0.3s;
+}
 
-        @keyframes coinPulse {
-            0%, 100% { 
-                transform: scale(1);
-            }
-            50% { 
-                transform: scale(1.05);
-            }
-        }
+/* ====== НИЖНЯЯ НАВИГАЦИЯ ====== */
+.bottom-nav {
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    padding-bottom: 20px;
+    background: rgba(10, 10, 26, 0.95);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
 
-        /* ====== ИНФОРМАЦИЯ ОБ ЭНЕРГИИ ====== */
-        .energy-section {
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.3);
-            margin: 20px;
-            border-radius: 15px;
-        }
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 11px;
+    color: #8b8b9e;
+    cursor: pointer;
+    transition: all 0.3s;
+    padding: 5px 10px;
+}
 
-        .energy-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
+.nav-item.active {
+    color: #ffd700;
+}
 
-        .energy-bar {
-            height: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            overflow: hidden;
-        }
+.nav-icon {
+    font-size: 24px;
+    margin-bottom: 4px;
+}
 
-        .energy-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #ff6b6b, #ffa500);
-            border-radius: 10px;
-            transition: width 0.3s ease;
-        }
+/* ====== ПАНЕЛИ ====== */
+.panel {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #0a0a1a;
+    z-index: 100;
+    overflow-y: auto;
+    padding: 60px 20px 100px;
+    animation: slideUp 0.3s ease-out;
+}
 
-        .energy-label {
-            font-size: 14px;
-        }
+.panel.active {
+    display: block;
+}
 
-        .energy-count {
-            font-weight: bold;
-        }
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
 
-        /* ====== НИЖНЕЕ МЕНЮ ====== */
-        .bottom-nav {
-            display: flex;
-            justify-content: space-around;
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.5);
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            border-radius: 20px 20px 0 0;
-        }
+.panel-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 15px 20px;
+    padding-top: 50px;
+    background: rgba(10, 10, 26, 0.95);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 101;
+}
 
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-            cursor: pointer;
-            opacity: 0.7;
-            transition: opacity 0.3s;
-            -webkit-tap-highlight-color: transparent;
-        }
+.panel-header h2 {
+    font-size: 20px;
+    font-weight: bold;
+}
 
-        .nav-item.active {
-            opacity: 1;
-            transform: scale(1.1);
-        }
+.close-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 28px;
+    cursor: pointer;
+    padding: 5px;
+}
 
-        .nav-item .icon {
-            font-size: 24px;
-        }
+.panel-content {
+    padding-top: 20px;
+}
 
-        .nav-item .label {
-            font-size: 12px;
-        }
+.section-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #8b8b9e;
+    margin: 20px 0 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+</style>
+    <style>
+/* ====== КАРТОЧКИ ЗАДАНИЙ ====== */
+.item-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s;
+}
 
-        /* ====== ПАНЕЛИ ====== */
-        .panel {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(20px);
-            z-index: 100;
-            display: none;
-            padding: 20px;
-            overflow-y: auto;
-        }
+.item-card:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(5px);
+}
 
-        .panel.active {
-            display: block;
-        }
+.item-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
 
-        .panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
+.item-icon {
+    font-size: 32px;
+}
 
-        .panel-header h2 {
-            font-size: 24px;
-        }
+.item-name {
+    font-weight: bold;
+    margin-bottom: 3px;
+}
 
-        .close-btn {
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            color: white;
-            padding: 10px 15px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 16px;
-            -webkit-tap-highlight-color: transparent;
-        }
+.item-reward {
+    color: #ffd700;
+    font-size: 14px;
+    font-weight: 600;
+}
 
-        /* Табы */
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
+.item-description {
+    color: #8b8b9e;
+    font-size: 12px;
+    margin-top: 4px;
+}
 
-        .tab {
-            flex: 1;
-            padding: 12px;
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            border-radius: 10px;
-            color: white;
-            cursor: pointer;
-            text-align: center;
-            font-size: 14px;
-            -webkit-tap-highlight-color: transparent;
-        }
+.claim-btn {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    min-width: 80px;
+}
 
-        .tab.active {
-            background: rgba(255, 255, 255, 0.3);
-        }
+.claim-btn:disabled {
+    background: rgba(255, 255, 255, 0.1);
+    color: #666;
+    cursor: not-allowed;
+}
 
-        /* Список заданий/бустов */
-        .item-list {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
+.claim-btn:not(:disabled):hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
 
-        .item-card {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+.claim-btn:not(:disabled):active {
+    transform: scale(0.95);
+}
 
-        .item-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
+/* ====== ДРУЗЬЯ ====== */
+.friend-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 
-        .item-icon {
-            font-size: 30px;
-        }
+.friend-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
 
-        .item-name {
-            font-weight: bold;
-            font-size: 16px;
-        }
+.friend-avatar {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+}
 
-        .item-description {
-            font-size: 12px;
-            opacity: 0.8;
-        }
+.friend-name {
+    font-weight: 600;
+}
 
-        .item-reward {
-            color: #FFD700;
-            font-weight: bold;
-            font-size: 14px;
-        }
+.friend-reward {
+    color: #ffd700;
+    font-size: 12px;
+    margin-top: 2px;
+}
 
-        .claim-btn {
-            background: linear-gradient(90deg, #2ecc71, #27ae60);
-            border: none;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: bold;
-            -webkit-tap-highlight-color: transparent;
-        }
+.invite-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #ffd700, #ffaa00);
+    color: #0a0a1a;
+    border: none;
+    padding: 15px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: all 0.3s;
+}
 
-        .claim-btn:disabled {
-            background: gray;
-            cursor: not-allowed;
-        }
+.invite-btn:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 20px rgba(255, 215, 0, 0.4);
+}
 
-        /* Друзья */
-        .friend-card {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+/* ====== ТОСТ УВЕДОМЛЕНИЕ ====== */
+.toast {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 15px 25px;
+    border-radius: 12px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    z-index: 1000;
+    font-size: 16px;
+    text-align: center;
+    white-space: nowrap;
+}
 
-        .friend-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
+.toast.show {
+    opacity: 1;
+}
 
-        .friend-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: #3498db;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 20px;
-        }
+/* ====== АНИМАЦИИ ====== */
+@keyframes floatUp {
+    0% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-80px) scale(1.5);
+        opacity: 0;
+    }
+}
 
-        .friend-name {
-            font-weight: bold;
-        }
+.float-number {
+    position: fixed;
+    font-size: 20px;
+    font-weight: bold;
+    color: #ffd700;
+    text-shadow: 0 2px 10px rgba(255, 215, 0, 0.5);
+    pointer-events: none;
+    z-index: 100;
+    animation: floatUp 1s ease-out forwards;
+}
 
-        .friend-reward {
-            font-size: 12px;
-            opacity: 0.8;
-        }
+/* ====== УРОВНИ ====== */
+.level-info {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+}
 
-        /* ====== ТОСТ УВЕДОМЛЕНИЯ ====== */
-        .toast {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.9);
-            color: #FFD700;
-            padding: 15px 25px;
-            border-radius: 10px;
-            font-size: 18px;
-            font-weight: bold;
-            z-index: 200;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
+/* ====== АДАПТИВНОСТЬ ====== */
+@media (max-width: 430px) {
+    .coin {
+        width: 150px;
+        height: 150px;
+    }
 
-        .toast.show {
-            opacity: 1;
-        }
+    .coin-icon {
+        font-size: 60px;
+    }
 
-        /* ====== РЕФЕРАЛЬНЫЕ ====== */
-        .referral-link-box {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 15px;
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
+    .balance-value {
+        font-size: 28px;
+    }
 
-        .referral-link {
-            flex: 1;
-            font-size: 12px;
-            word-break: break-all;
-            background: transparent;
-            border: none;
-            color: white;
-        }
+    .header-value {
+        font-size: 14px;
+    }
 
-        .copy-btn {
-            background: #3498db;
-            border: none;
-            color: white;
-            padding: 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
-        }
-    </style>
+    .level-number {
+        font-size: 24px;
+    }
+}
+</style>
 </head>
 <body>
-    <!-- ШАПКА -->
-    <div class="header">
-        <div class="user-info">
-            <div class="user-avatar" id="userAvatar">👤</div>
-            <div>
-                <div class="user-name" id="userName">Player</div>
+    <!-- ====== ГЛАВНЫЙ ЭКРАН ====== -->
+    <div id="mainScreen">
+        <!-- Шапка -->
+        <div class="header">
+            <div class="header-item">
+                <span class="header-value">🚀</span>
+                <span>Уровень</span>
+                <span class="header-value" id="level">1</span>
+            </div>
+            <div class="header-item">
+                <span>Множитель</span>
+                <span class="header-value" id="multiplier">×1</span>
             </div>
         </div>
-        <div class="stats">
-            <div class="stat-item">
-                <div class="stat-label">Уровень</div>
-                <div class="stat-value" id="level">1</div>
+
+        <!-- Баланс -->
+        <div class="balance-container">
+            <div class="balance-title">Баланс</div>
+            <div class="balance-value" id="balanceMain">0</div>
+            <div class="level-badge" id="levelBadge">Уровень 1</div>
+        </div>
+
+        <!-- Монета -->
+        <div class="coin-container" id="coinContainer">
+            <div class="coin" id="coin">
+                <div class="coin-icon">💰</div>
             </div>
-            <div class="stat-item">
-                <div class="stat-label">Множитель</div>
-                <div class="stat-value" id="multiplier">×1</div>
+        </div>
+
+        <!-- Энергия -->
+        <div class="energy-container">
+            <div class="energy-info">
+                <span>⚡ Энергия</span>
+                <span id="energyCount">500/500</span>
+            </div>
+            <div class="energy-bar">
+                <div class="energy-fill" id="energyFill" style="width: 100%"></div>
+            </div>
+        </div>
+
+        <!-- Нижняя навигация -->
+        <div class="bottom-nav">
+            <div class="nav-item active" data-panel="main">
+                <span class="nav-icon">💰</span>
+                <span>Играть</span>
+            </div>
+            <div class="nav-item" data-panel="tasks">
+                <span class="nav-icon">📋</span>
+                <span>Задания</span>
+            </div>
+            <div class="nav-item" data-panel="boosts">
+                <span class="nav-icon">🚀</span>
+                <span>Бусты</span>
+            </div>
+            <div class="nav-item" data-panel="friends">
+                <span class="nav-icon">👥</span>
+                <span>Друзья</span>
             </div>
         </div>
     </div>
 
-    <!-- БАЛАНС -->
-    <div class="balance-section">
-        <div class="balance" id="balance">0</div>
-        <div class="balance-label">💰 Geek Coins</div>
-    </div>
-
-    <!-- МОНЕТА -->
-    <div class="coin-container" id="coinContainer">
-        <div class="coin" id="coin"></div>
-    </div>
-
-    <!-- ЭНЕРГИЯ -->
-    <div class="energy-section">
-        <div class="energy-header">
-            <span class="energy-label">⚡ Энергия</span>
-            <span class="energy-count" id="energyCount">500/500</span>
-        </div>
-        <div class="energy-bar">
-            <div class="energy-fill" id="energyFill" style="width: 100%"></div>
-        </div>
-    </div>
-
-    <!-- НИЖНЕЕ МЕНЮ -->
-    <div class="bottom-nav">
-        <div class="nav-item active" data-panel="main">
-            <span class="icon">🏠</span>
-            <span class="label">Главная</span>
-        </div>
-        <div class="nav-item" data-panel="tasks">
-            <span class="icon">📋</span>
-            <span class="label">Задания</span>
-        </div>
-        <div class="nav-item" data-panel="boosts">
-            <span class="icon">⚡</span>
-            <span class="label">Бусты</span>
-        </div>
-        <div class="nav-item" data-panel="friends">
-            <span class="icon">👥</span>
-            <span class="label">Друзья</span>
-        </div>
-    </div>
-
-    <!-- ПАНЕЛЬ ЗАДАНИЙ -->
+    <!-- ====== ПАНЕЛЬ ЗАДАНИЙ ====== -->
     <div class="panel" id="tasksPanel">
         <div class="panel-header">
             <h2>📋 Задания</h2>
             <button class="close-btn" onclick="closePanel('tasksPanel')">✕</button>
         </div>
-        <div class="tabs">
-            <button class="tab active" onclick="showTab('daily')">Ежедневные</button>
-            <button class="tab" onclick="showTab('one-time')">Разовые</button>
+        <div class="panel-content">
+            <div class="section-title">Ежедневные</div>
+            <div id="dailyTasks"></div>
+
+            <div class="section-title">Одноразовые</div>
+            <div id="oneTimeTasks"></div>
         </div>
-        <div id="dailyTasks" class="item-list"></div>
-        <div id="oneTimeTasks" class="item-list" style="display: none"></div>
     </div>
 
-    <!-- ПАНЕЛЬ БУСТОВ -->
+    <!-- ====== ПАНЕЛЬ БУСТОВ ====== -->
     <div class="panel" id="boostsPanel">
         <div class="panel-header">
-            <h2>⚡ Бусты</h2>
+            <h2>🚀 Бусты</h2>
             <button class="close-btn" onclick="closePanel('boostsPanel')">✕</button>
         </div>
-        <div class="tabs">
-            <button class="tab active" onclick="showTab('multiplier')">Множитель</button>
-            <button class="tab" onclick="showTab('energy')">Энергия</button>
+        <div class="panel-content">
+            <div class="section-title">Улучшения</div>
+            <div id="boostsList"></div>
+
+            <div class="section-title">Уровень</div>
+            <div class="level-info" style="text-align: center; margin: 20px 0;">
+                <div style="font-size: 48px; margin-bottom: 10px;">🏆</div>
+                <div style="font-size: 20px; font-weight: bold;" id="levelNumber">Уровень 1</div>
+                <div style="color: #8b8b9e; margin-top: 10px;">Каждые 500 монет = +1 уровень</div>
+            </div>
         </div>
-        <div id="multiplierBoosts" class="item-list"></div>
-        <div id="energyBoosts" class="item-list" style="display: none"></div>
     </div>
 
-    <!-- ПАНЕЛЬ ДРУЗЕЙ -->
+    <!-- ====== ПАНЕЛЬ ДРУЗЕЙ ====== -->
     <div class="panel" id="friendsPanel">
         <div class="panel-header">
             <h2>👥 Друзья</h2>
             <button class="close-btn" onclick="closePanel('friendsPanel')">✕</button>
         </div>
+        <div class="panel-content">
+            <div class="section-title">Пригласи друга</div>
+            <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 20px; text-align: center;">
+                <div style="font-size: 40px; margin-bottom: 10px;">🤝</div>
+                <div style="font-size: 14px; color: #8b8b9e; margin-bottom: 15px;">
+                    Пригласи друга и получи бонус!
+                </div>
+            </div>
 
-        <div class="referral-link-box">
-            <input type="text" id="referralLink" readonly>
-            <button class="copy-btn" onclick="copyReferralLink()">📋</button>
+            <div class="section-title">Мои друзья</div>
+            <div id="friendsList"></div>
+
+            <button class="invite-btn" id="inviteFriend">📨 Пригласить друга</button>
         </div>
-
-        <h3>Статистика</h3>
-        <div style="margin-bottom: 20px;">
-            <p>Приглашено друзей: <span id="friendCount">0</span></p>
-            <p>Заработано за друзей: <span id="friendEarnings">0</span></p>
-        </div>
-
-        <div id="friendsList" class="item-list"></div>
     </div>
 
-    <!-- ТОСТ -->
+    <!-- ====== ТОСТ УВЕДОМЛЕНИЕ ====== -->
     <div class="toast" id="toast"></div>
-
-    <!-- ПОДКЛЮЧЕНИЕ JAVASCRIPT -->
-    <script>
 <script>
-    // Telegram Mini App API
-    const tg = window.Telegram.WebApp;
-    tg.ready();
-    tg.expand();
-    tg.disableVerticalSwipes();
-
-    // ====== СОСТОЯНИЕ ПРИЛОЖЕНИЯ ======
-    let state = {
-        coins: 0,
-        energy: 100,
-        maxEnergy: 100,
+    // ====== СОСТОЯНИЕ ИГРЫ ======
+    let gameState = {
+        balance: 0,
+        level: 1,
         multiplier: 1,
-        referrals: 0,
-        referralEarnings: 0,
-        autoCollect: false,
-        lastSaveTime: Date.now(),
-        lastEnergyRegen: Date.now(),
-        userId: null,
-        username: 'Пользователь',
-        isPremium: false,
-        boostLevels: {
-            energy: 1,
-            recharge: 1,
-            multiplier: 1
-        },
-        boostCosts: {
-            energy: 50,
-            recharge: 30,
-            multiplier: 100
-        }
+        energy: 500,
+        maxEnergy: 500,
+        energyRegenRate: 1,
+        lastTapTime: 0,
+        tapBoost: 1,
+        friends: [],
+        dailyTasks: [],
+        oneTimeTasks: []
     };
 
-    // ====== ТЕЛЕГРАМ ИНИЦИАЛИЗАЦИЯ ======
-    function initTelegram() {
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            const user = tg.initDataUnsafe.user;
-            state.userId = user.id;
-            state.username = user.first_name || 'Пользователь';
-            state.isPremium = user.is_premium || false;
+    // ====== ЭЛЕМЕНТЫ DOM ======
+    const coin = document.getElementById('coin');
+    const balanceMain = document.getElementById('balanceMain');
+    const levelElement = document.getElementById('level');
+    const multiplierElement = document.getElementById('multiplier');
+    const energyCount = document.getElementById('energyCount');
+    const energyFill = document.getElementById('energyFill');
+    const toast = document.getElementById('toast');
+    const dailyTasksContainer = document.getElementById('dailyTasks');
+    const oneTimeTasksContainer = document.getElementById('oneTimeTasks');
+    const boostsList = document.getElementById('boostsList');
+    const friendsList = document.getElementById('friendsList');
+    const levelNumber = document.getElementById('levelNumber');
+    const levelBadge = document.getElementById('levelBadge');
 
-            // Обновляем UI
-            document.getElementById('userName').textContent = state.username;
-
-            if (user.photo_url) {
-                const avatar = document.getElementById('userAvatar');
-                avatar.innerHTML = `<img src="${user.photo_url}" alt="avatar">`;
-            } else if (user.first_name) {
-                document.getElementById('userAvatar').textContent = user.first_name.charAt(0).toUpperCase();
-            }
-
-            // Загружаем данные пользователя из Telegram Cloud Storage
-            loadUserData();
-        }
-    }
-
-    // ====== ТЕЛЕГРАМ КЛАУД ХРАНИЛИЩЕ ======
-    async function saveUserData() {
-        const data = JSON.stringify(state);
-        try {
-            if (tg.CloudStorage) {
-                await tg.CloudStorage.setItem('userData', data);
-            }
-        } catch (error) {
-            console.error('Ошибка сохранения:', error);
-        }
-        // Также сохраняем в localStorage как резервную копию
-        localStorage.setItem('coinClickerData', data);
-    }
-
-    async function loadUserData() {
-        try {
-            let data = null;
-            if (tg.CloudStorage) {
-                data = await tg.CloudStorage.getItem('userData');
-            }
-            if (!data) {
-                data = localStorage.getItem('coinClickerData');
-            }
-
-            if (data) {
-                const savedState = JSON.parse(data);
-                state = { ...state, ...savedState };
-                updateUI();
-                checkAutoCollect();
-            }
-        } catch (error) {
-            console.error('Ошибка загрузки:', error);
-        }
-    }
-
-    // ====== УПРАВЛЕНИЕ КЛИКАМИ ======
-    function handleCoinClick(event) {
-        if (state.energy < 1) return;
-
-        // Уменьшаем энергию
-        state.energy -= 1;
-
-        // Вычисляем награду
-        const reward = 0.5 * state.multiplier;
-        state.coins += reward;
-
-        // Анимация
-        createTapAnimation(event, reward);
-        animateCoin();
-
-        // Обновляем UI
+    // ====== ИНИЦИАЛИЗАЦИЯ ======
+    function init() {
+        loadState();
         updateUI();
-        saveUserData();
+        setupTasks();
+        setupBoosts();
+        setupFriends();
+        startEnergyRegen();
+    }
 
-        // Вибрация для Telegram
-        if (navigator.vibrate) {
-            navigator.vibrate(10);
+    // ====== СОХРАНЕНИЕ / ЗАГРУЗКА ======
+    function saveState() {
+        localStorage.setItem('tapGame', JSON.stringify(gameState));
+    }
+
+    function loadState() {
+        const saved = localStorage.getItem('tapGame');
+        if (saved) {
+            gameState = { ...gameState, ...JSON.parse(saved) };
         }
-        tg.HapticFeedback.impactOccurred('light');
     }
 
-    function createTapAnimation(event, reward) {
-        const coinContainer = document.getElementById('coinContainer');
-        const rect = coinContainer.getBoundingClientRect();
-
-        // Создаем элемент анимации
-        const tapElement = document.createElement('div');
-        tapElement.className = 'tap-animation';
-        tapElement.textContent = `+${reward.toFixed(1)}`;
-        tapElement.style.left = (event.clientX - rect.left) + 'px';
-        tapElement.style.top = (event.clientY - rect.top) + 'px';
-
-        // Случайное смещение
-        tapElement.style.transform = `translateX(${Math.random() * 40 - 20}px)`;
-
-        coinContainer.appendChild(tapElement);
-
-        // Удаляем после анимации
-        setTimeout(() => {
-            tapElement.remove();
-        }, 1000);
+    // ====== ОБНОВЛЕНИЕ UI ======
+    function updateUI() {
+        balanceMain.textContent = formatNumber(gameState.balance);
+        levelElement.textContent = gameState.level;
+        multiplierElement.textContent = `×${gameState.multiplier}`;
+        levelBadge.textContent = `Уровень ${gameState.level}`;
+        levelNumber.textContent = `Уровень ${gameState.level}`;
+        energyCount.textContent = `${Math.floor(gameState.energy)}/${gameState.maxEnergy}`;
+        energyFill.style.width = `${(gameState.energy / gameState.maxEnergy) * 100}%`;
+        updateTasksUI();
+        updateBoostsUI();
+        updateFriendsUI();
     }
 
-    function animateCoin() {
-        const coin = document.querySelector('.coin');
+    function formatNumber(num) {
+        if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+        if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+        return Math.floor(num).toString();
+    }
+
+    // ====== ТАП ПО МОНЕТЕ ======
+    coin.addEventListener('click', (e) => {
+        tapCoin(e);
+    });
+
+    function tapCoin(e) {
+        const now = Date.now();
+        if (now - gameState.lastTapTime < 100) return; // антиспам 100мс
+        gameState.lastTapTime = now;
+
+        if (gameState.energy <= 0) {
+            showToast('⚡ Нет энергии!');
+            return;
+        }
+
+        // Считаем награду
+        const reward = 1 * gameState.multiplier;
+        gameState.balance += reward;
+        gameState.energy -= 1;
+
+        // Обновляем уровень
+        const newLevel = Math.floor(gameState.balance / 500) + 1;
+        if (newLevel > gameState.level) {
+            gameState.level = newLevel;
+            gameState.multiplier = newLevel;
+            showToast(`🎉 Уровень ${newLevel}!`);
+        }
+
+        // Анимация монеты
         coin.style.transform = 'scale(0.95)';
         setTimeout(() => {
             coin.style.transform = 'scale(1)';
         }, 100);
+
+        // Всплывающее число
+        showFloatNumber(e.clientX, e.clientY, `+${reward}`);
+
+        updateUI();
+        saveState();
+    }
+
+    // ====== ВСПЛЫВАЮЩЕЕ ЧИСЛО ======
+    function showFloatNumber(x, y, text) {
+        const floatEl = document.createElement('div');
+        floatEl.className = 'float-number';
+        floatEl.textContent = text;
+        floatEl.style.left = `${x}px`;
+        floatEl.style.top = `${y}px`;
+        document.body.appendChild(floatEl);
+
+        setTimeout(() => floatEl.remove(), 1000);
+    }
+
+    // ====== ТОСТ ======
+    function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    // ====== ВОССТАНОВЛЕНИЕ ЭНЕРГИИ ======
+    function startEnergyRegen() {
+        setInterval(() => {
+            if (gameState.energy < gameState.maxEnergy) {
+                gameState.energy = Math.min(
+                    gameState.maxEnergy,
+                    gameState.energy + gameState.energyRegenRate
+                );
+                updateUI();
+                saveState();
+            }
+        }, 1000); // каждую секунду
+    }
+
+    // ====== ЗАДАНИЯ ======
+    function setupTasks() {
+        gameState.dailyTasks = [
+            {
+                id: 'daily1',
+                name: 'Сделай 100 тапов',
+                reward: 50,
+                target: 100,
+                progress: 0,
+                claimed: false
+            },
+            {
+                id: 'daily2',
+                name: 'Собери 1000 монет',
+                reward: 100,
+                target: 1000,
+                progress: gameState.balance,
+                claimed: false
+            }
+        ];
+
+        gameState.oneTimeTasks = [
+            {
+                id: 'one1',
+                name: 'Достигни 5 уровня',
+                reward: 200,
+                target: 5,
+                progress: gameState.level,
+                claimed: false
+            },
+            {
+                id: 'one2',
+                name: 'Пригласи друга',
+                reward: 150,
+                target: 1,
+                progress: gameState.friends.length,
+                claimed: false
+            }
+        ];
+    }
+
+    function updateTasksUI() {
+        // Ежедневные
+        dailyTasksContainer.innerHTML = '';
+        gameState.dailyTasks.forEach(task => {
+            const card = createTaskCard(task);
+            dailyTasksContainer.appendChild(card);
+        });
+
+        // Одноразовые
+        oneTimeTasksContainer.innerHTML = '';
+        gameState.oneTimeTasks.forEach(task => {
+            const card = createTaskCard(task);
+            oneTimeTasksContainer.appendChild(card);
+        });
+    }
+
+    function createTaskCard(task) {
+        const card = document.createElement('div');
+        card.className = 'item-card';
+
+        const progress = Math.min(task.progress, task.target);
+        const isComplete = progress >= task.target;
+
+        card.innerHTML = `
+            <div class="item-info">
+                <div class="item-icon">🎯</div>
+                <div>
+                    <div class="item-name">${task.name}</div>
+                    <div class="item-reward">${task.reward} 🪙</div>
+                </div>
+            </div>
+            <button class="claim-btn" ${!isComplete || task.claimed ? 'disabled' : ''}>
+                ${task.claimed ? '✅' : isComplete ? 'Забрать' : `${progress}/${task.target}`}
+            </button>
+        `;
+
+        const btn = card.querySelector('.claim-btn');
+        if (isComplete && !task.claimed) {
+            btn.addEventListener('click', () => {
+                gameState.balance += task.reward;
+                task.claimed = true;
+                showToast(`+${task.reward} монет!`);
+                updateUI();
+                saveState();
+            });
+        }
+
+        return card;
     }
 
     // ====== БУСТЫ ======
-    function buyBoost(type) {
-        const cost = state.boostCosts[type];
+    function setupBoosts() {
+        boostsList.innerHTML = '';
 
-        if (state.coins < cost) {
-            tg.showAlert('Недостаточно монет!');
-            return;
-        }
+        const boosts = [
+            { name: 'Удвоить энергию', cost: 100, effect: () => { gameState.maxEnergy *= 2; } },
+            { name: 'Ускорить регенерацию', cost: 150, effect: () => { gameState.energyRegenRate += 1; } },
+            { name: 'Удвоить множитель', cost: 200, effect: () => { gameState.multiplier *= 2; } }
+        ];
 
-        state.coins -= cost;
+        boosts.forEach(boost => {
+            const card = document.createElement('div');
+            card.className = 'item-card';
+            card.innerHTML = `
+                <div class="item-info">
+                    <div class="item-icon">⚡</div>
+                    <div>
+                        <div class="item-name">${boost.name}</div>
+                        <div class="item-description">${boost.cost} монет</div>
+                    </div>
+                </div>
+                <button class="claim-btn" id="boostBtn">Купить</button>
+            `;
 
-        switch(type) {
-            case 'energy':
-                state.maxEnergy += 50;
-                state.energy = state.maxEnergy;
-                state.boostCosts.energy = Math.floor(cost * 1.5);
-                break;
-            case 'recharge':
-                state.energy = state.maxEnergy;
-                state.boostCosts.recharge = Math.floor(cost * 1.5);
-                break;
-            case 'multiplier':
-                state.multiplier *= 2;
-                state.boostCosts.multiplier = Math.floor(cost * 2);
-                break;
-        }
-
-        updateUI();
-        saveUserData();
-        tg.HapticFeedback.notificationOccurred('success');
-    }
-
-    // ====== ЭНЕРГИЯ ======
-    function regenEnergy() {
-        const now = Date.now();
-        const timePassed = (now - state.lastEnergyRegen) / 1000;
-        const energyRegen = Math.floor(timePassed * 0.5); // 0.5 энергии в секунду
-
-        if (energyRegen > 0 && state.energy < state.maxEnergy) {
-            state.energy = Math.min(state.energy + energyRegen, state.maxEnergy);
-            state.lastEnergyRegen = now;
-            updateUI();
-        }
-
-        if (state.energy >= state.maxEnergy) {
-            state.lastEnergyRegen = now;
-        }
-    }
-
-    // ====== СВАЙП НАВИГАЦИЯ ======
-    let startX = 0;
-    let startY = 0;
-    let isSwiping = false;
-
-    function initSwipe() {
-        const appContainer = document.getElementById('appContainer');
-
-        appContainer.addEventListener('touchstart', (e) => {
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-            isSwiping = true;
-        });
-
-        appContainer.addEventListener('touchmove', (e) => {
-            if (!isSwiping) return;
-
-            const currentX = e.touches[0].clientX;
-            const currentY = e.touches[0].clientY;
-
-            const diffX = currentX - startX;
-            const diffY = currentY - startY;
-
-            // Только горизонтальные свайпы
-            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
-                e.preventDefault();
-                const pageContainer = document.getElementById('pageContainer');
-                const currentTransform = parseFloat(getComputedStyle(pageContainer).transform.split(',')[4]) || 0;
-
-                if (diffX < 0 && currentTransform === 0) {
-                    pageContainer.style.transform = 'translateX(-50%)';
-                } else if (diffX > 0 && currentTransform !== 0) {
-                    pageContainer.style.transform = 'translateX(0%)';
+            const btn = card.querySelector('.claim-btn');
+            btn.addEventListener('click', () => {
+                if (gameState.balance >= boost.cost) {
+                    gameState.balance -= boost.cost;
+                    boost.effect();
+                    showToast('🚀 Буст куплен!');
+                    updateUI();
+                    saveState();
+                } else {
+                    showToast('😢 Недостаточно монет!');
                 }
-                isSwiping = false;
-            }
-        });
+            });
 
-        appContainer.addEventListener('touchend', () => {
-            isSwiping = false;
+            boostsList.appendChild(card);
         });
     }
 
-    // ====== РЕФЕРАЛЬНАЯ СИСТЕМА ======
-    function initReferralSystem() {
-        const referralLink = document.getElementById('referralLink');
-        const botUsername = 'RB_coin_official_bot'; // Ваш бот
-        const startParam = state.userId || 'default';
+    function updateBoostsUI() {
+        // Обновляем кнопки бустов при необходимости
+    }
 
-        referralLink.value = `https://t.me/${botUsername}?start=${startParam}`;
+    // ====== ДРУЗЬЯ ======
+    function setupFriends() {
+        // Заглушка для демонстрации
+        gameState.friends = [
+            { name: 'Иван', reward: 25 },
+            { name: 'Мария', reward: 25 },
+            { name: 'Петр', reward: 25 }
+        ];
+        updateFriendsUI();
+    }
 
-        // Обработка start параметра
-        if (tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
-            const referrerId = tg.initDataUnsafe.start_param;
-            if (referrerId && referrerId !== String(state.userId)) {
-                state.referrals += 1;
-                state.referralEarnings += 10; // Бонус за реферала
-                state.coins += 10;
-                updateUI();
-                saveUserData();
-                tg.showAlert('Вы получили 10 монет за приглашение!');
-            }
+    function updateFriendsUI() {
+        friendsList.innerHTML = '';
+        gameState.friends.forEach(friend => {
+            const card = document.createElement('div');
+            card.className = 'friend-card';
+            card.innerHTML = `
+                <div class="friend-info">
+                    <div class="friend-avatar">👤</div>
+                    <div>
+                        <div class="friend-name">${friend.name}</div>
+                        <div class="friend-reward">${friend.reward} 🪙</div>
+                    </div>
+                </div>
+                <div>✔️</div>
+            `;
+            friendsList.appendChild(card);
+        });
+
+        // Обновляем задание "Пригласи друга"
+        const friendTask = gameState.oneTimeTasks.find(t => t.id === 'one2');
+        if (friendTask) {
+            friendTask.progress = gameState.friends.length;
         }
     }
 
-    async function copyReferralLink() {
-        const referralLink = document.getElementById('referralLink');
+    // ====== ИНВАЙТ ДРУГА ======
+    document.getElementById('inviteFriend').addEventListener('click', () => {
+        // Имитация приглашения (Telegram WebApp API)
+        if (window.Telegram && Telegram.WebApp) {
+            Telegram.WebApp.openTelegramLink('https://t.me/GeekBot');
+            showToast('📨 Ссылка отправлена!');
+        } else {
+            // Для тестирования вне Telegram
+            const link = prompt('Введите ссылку-приглашение (или нажмите OK):', 'https://t.me/GeekBot');
+            if (link) {
+                gameState.friends.push({ name: 'Новый друг', reward: 25 });
+                showToast('👥 Друг добавлен!');
+                updateUI();
+                saveState();
+            }
+        }
+    });
 
-        try {
-            if (navigator.clipboard) {
-                await navigator.clipboard.writeText(referralLink.value);
-                tg.showAlert('Ссылка скопирована!');
+    // ====== НАВИГАЦИЯ ======
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+            // Убираем активный класс у всех
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            // Добавляем активный
+            item.classList.add('active');
+
+            // Закрываем все панели
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+
+            // Открываем нужную
+            const panelId = item.dataset.panel;
+            if (panelId === 'main') {
+                // Главный экран уже виден
             } else {
-                referralLink.select();
-                document.execCommand('copy');
-                tg.showAlert('Ссылка скопирована!');
+                const panel = document.getElementById(panelId + 'Panel');
+                if (panel) {
+                    panel.classList.add('active');
+                    updateUI(); // обновляем содержимое панели
+                }
             }
-        } catch (error) {
-            console.error('Ошибка копирования:', error);
-            tg.showAlert('Ошибка копирования');
-        }
+        });
+    });
+
+    // ====== ЗАКРЫТИЕ ПАНЕЛЕЙ ======
+    function closePanel(panelId) {
+        document.getElementById(panelId).classList.remove('active');
+        // Возвращаем активность на "Играть"
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        document.querySelector('.nav-item[data-panel="main"]').classList.add('active');
     }
 
-    function shareReferralLink() {
-        const referralLink = document.getElementById('referralLink');
-        const shareText = `💰 Присоединяйся ко мне в Coin Clicker! Зарабатывай монеты и получай бонусы!\n\n🔗 ${referralLink.value}`;
-
-        if (tg.openTelegramLink) {
-            tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(referralLink.value)}&text=${encodeURIComponent(shareText)}`);
-        } else {
-            window.open(`https://t.me/share/url?url=${encodeURIComponent(referralLink.value)}&text=${encodeURIComponent(shareText)}`, '_blank');
-        }
-    }
-
-    // ====== АВТОСБОР ======
-    function toggleAutoCollect() {
-        if (!state.autoCollect) {
-            const cost = 500;
-            if (state.coins < cost) {
-                tg.showAlert('Недостаточно монет для покупки автосбора!');
-                return;
-            }
-            state.coins -= cost;
-            state.autoCollect = true;
-            document.getElementById('autoCollectButton').textContent = 'Выключить';
-            document.getElementById('autoCollectButton').classList.add('active');
-            document.getElementById('autoCollectStatus').textContent = 'Включен';
-            tg.HapticFeedback.notificationOccurred('success');
-        } else {
-            state.autoCollect = false;
-            document.getElementById('autoCollectButton').textContent = 'Включить (💰 500)';
-            document.getElementById('autoCollectButton').classList.remove('active');
-            document.getElementById('autoCollectStatus').textContent = 'Выключен';
-        }
-
-        updateUI();
-        saveUserData();
-    }
-
-    function checkAutoCollect() {
-        if (state.autoCollect) {
-            const now = Date.now();
-            const timePassed = (now - state.lastSaveTime) / 1000;
-            const collected = Math.floor(timePassed / 60); // 1 монета в минуту
-
-            if (collected > 0) {
-                state.coins += collected;
-                state.lastSaveTime = now;
-                updateUI();
-                saveUserData();
-            }
-        }
-    }
-
-    // ====== UI ОБНОВЛЕНИЕ ======
-    function updateUI() {
-        document.getElementById('coinsCount').textContent = state.coins.toFixed(2);
-        document.getElementById('energyCount').textContent = Math.floor(state.energy);
-
-        const energyPercent = (state.energy / state.maxEnergy) * 100;
-        document.getElementById('energyFill').style.width = energyPercent + '%';
-
-        // Обновляем бусты
-        document.getElementById('energyBoostPrice').textContent = `💰 ${state.boostCosts.energy}`;
-        document.getElementById('rechargeBoostPrice').textContent = `💰 ${state.boostCosts.recharge}`;
-        document.getElementById('multiplierBoostPrice').textContent = `💰 ${state.boostCosts.multiplier}`;
-
-        // Обновляем реферальную статистику
-        document.getElementById('referralCount').textContent = state.referrals;
-        document.getElementById('referralEarnings').textContent = state.referralEarnings.toFixed(0);
-        document.getElementById('totalEarnings').textContent = state.coins.toFixed(0);
-
-        // Проверяем доступность бустов
-        document.getElementById('boostEnergy').classList.toggle('disabled', state.coins < state.boostCosts.energy);
-        document.getElementById('boostRecharge').classList.toggle('disabled', state.coins < state.boostCosts.recharge);
-        document.getElementById('boostMultiplier').classList.toggle('disabled', state.coins < state.boostCosts.multiplier);
-    }
-
-    // ====== ПОДЕЛИТЬСЯ ======
-    function shareApp() {
-        const shareText = `💰 Я уже собрал ${state.coins.toFixed(0)} монет в Coin Clicker! Присоединяйся и зарабатывай вместе со мной!`;
-
-        if (tg.openTelegramLink) {
-            tg.openTelegramLink(`https://t.me/share/url?url=https://t.me/RB_coin_official_bot&text=${encodeURIComponent(shareText)}`);
-        }
-    }
-
-    // ====== ОТКРЫТЬ TELEGRAM ======
-    function openTelegram() {
-        if (tg.openTelegramLink) {
-            tg.openTelegramLink('https://t.me/RB_coin_official_bot');
-        } else {
-            window.open('https://t.me/RB_coin_official_bot', '_blank');
-        }
-    }
-
-    // ====== ИНИЦИАЛИЗАЦИЯ ======
-    function init() {
-        initTelegram();
-        initReferralSystem();
-        initSwipe();
-
-        // Обработчик кликов по монете
-        document.getElementById('coinContainer').addEventListener('click', handleCoinClick);
-
-        // Регенерация энергии каждую секунду
-        setInterval(regenEnergy, 1000);
-
-        // Автосбор каждую минуту
-        setInterval(checkAutoCollect, 60000);
-
-        // Сохранение каждые 30 секунд
-        setInterval(saveUserData, 30000);
-
-        // Первоначальное обновление UI
-        updateUI();
-    }
-
-    // Запуск приложения после загрузки страницы
+    // ====== ЗАПУСК ======
     document.addEventListener('DOMContentLoaded', init);
 </script>
-javascript
-Копировать
-        // ====== СОСТОЯНИЕ ИГРЫ ======
-        let gameState = {
-            balance: 0,
-            energy: 500,
-            maxEnergy: 500,
-            multiplier: 1,
-            level: 1,
-            completedDailyTasks: [],
-            completedOneTimeTasks: [],
-            friends: []
-        };
-
-        // ====== DOM ЭЛЕМЕНТЫ ======
-        const balanceEl = document.getElementById('balance');
-        const energyCountEl = document.getElementById('energyCount');
-        const energyFillEl = document.getElementById('energyFill');
-        const levelEl = document.getElementById('level');
-        const multiplierEl = document.getElementById('multiplier');
-        const coinContainer = document.getElementById('coinContainer');
-        const coin = document.getElementById('coin');
-        const toast = document.getElementById('toast');
-
-        // ====== СОХРАНЕНИЕ ИГРЫ ======
-        function saveGame() {
-            localStorage.setItem('geekCoinSave', JSON.stringify(gameState));
-        }
-
-        function loadGame() {
-            const saved = localStorage.getItem('geekCoinSave');
-            if (saved) {
-                gameState = { ...gameState, ...JSON.parse(saved) };
-            }
-        }
-
-        // ====== ОБНОВЛЕНИЕ ИНТЕРФЕЙСА ======
-        function updateUI() {
-            balanceEl.textContent = Math.floor(gameState.balance);
-            energyCountEl.textContent = `${Math.floor(gameState.energy)}/${gameState.maxEnergy}`;
-            energyFillEl.style.width = `${(gameState.energy / gameState.maxEnergy) * 100}%`;
-            levelEl.textContent = gameState.level;
-            multiplierEl.textContent = `×${gameState.multiplier}`;
-        }
-
-        // ====== ТАП ПО МОНЕТЕ ======
-        coinContainer.addEventListener('click', (e) => {
-            if (gameState.energy >= 1) {
-                const tapValue = 1 * gameState.multiplier;
-                gameState.balance += tapValue;
-                gameState.energy -= 1;
-
-                // Анимация
-                createTapAnimation(e.clientX, e.clientY, `+${tapValue}`);
-                coin.style.transform = 'scale(0.9)';
-                setTimeout(() => {
-                    coin.style.transform = 'scale(1)';
-                }, 100);
-
-                updateUI();
-                checkLevelUp();
-                saveGame();
-            } else {
-                showToast('⚡ Нет энергии!');
-            }
-        });
-
-        // ====== АНИМАЦИЯ ТАПА ======
-        function createTapAnimation(x, y, text) {
-            const anim = document.createElement('div');
-            anim.className = 'tap-animation';
-            anim.textContent = text;
-            anim.style.left = (x - 20) + 'px';
-            anim.style.top = (y - 20) + 'px';
-            document.body.appendChild(anim);
-
-            setTimeout(() => anim.remove(), 1000);
-        }
-
-        // ====== ВОССТАНОВЛЕНИЕ ЭНЕРГИИ ======
-        setInterval(() => {
-            if (gameState.energy < gameState.maxEnergy) {
-                gameState.energy += 1;
-                updateUI();
-                saveGame();
-            }
-        }, 3000);
-
-        // ====== ПРОВЕРКА УРОВНЯ ======
-        function checkLevelUp() {
-            const newLevel = Math.floor(gameState.balance / 1000) + 1;
-            if (newLevel > gameState.level) {
-                gameState.level = newLevel;
-                gameState.multiplier = newLevel;
-                showToast(`🎉 Уровень ${newLevel}! Множитель ×${newLevel}`);
-            }
-        }
-
-        // ====== НАВИГАЦИЯ ======
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', () => {
-                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-                item.classList.add('active');
-
-                const panel = item.dataset.panel;
-                if (panel === 'main') {
-                    closeAllPanels();
-                } else if (panel === 'tasks') {
-                    openPanel('tasksPanel');
-                } else if (panel === 'boosts') {
-                    openPanel('boostsPanel');
-                } else if (panel === 'friends') {
-                    openPanel('friendsPanel');
-                }
-            });
-        });
-
-        function openPanel(id) {
-            closeAllPanels();
-            document.getElementById(id).classList.add('active');
-        }
-
-        function closePanel(id) {
-            document.getElementById(id).classList.remove('active');
-        }
-
-        function closeAllPanels() {
-            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-        }
-
-        // ====== ТАБЫ ======
-        function showTab(tabName) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
-
-            if (tabName === 'daily') {
-                document.getElementById('dailyTasks').style.display = 'block';
-                document.getElementById('oneTimeTasks').style.display = 'none';
-            } else if (tabName === 'one-time') {
-                document.getElementById('dailyTasks').style.display = 'none';
-                document.getElementById('oneTimeTasks').style.display = 'block';
-            } else if (tabName === 'multiplier') {
-                document.getElementById('multiplierBoosts').style.display = 'block';
-                document.getElementById('energyBoosts').style.display = 'none';
-            } else if (tabName === 'energy') {
-                document.getElementById('multiplierBoosts').style.display = 'none';
-                document.getElementById('energyBoosts').style.display = 'block';
-            }
-        }
-
-        // ====== ЗАДАНИЯ ======
-        function renderTasks() {
-            const dailyTasks = document.getElementById('dailyTasks');
-            const oneTimeTasks = document.getElementById('oneTimeTasks');
-
-            dailyTasks.innerHTML = '';
-            oneTimeTasks.innerHTML = '';
-
-            dailyTasksData.forEach(task => {
-                const isCompleted = gameState.completedDailyTasks.includes(task.id);
-                const card = document.createElement('div');
-                card.className = 'item-card';
-                card.innerHTML = `
-                    <div class="item-info">
-                        <div class="item-icon">${task.icon}</div>
-                        <div>
-                            <div class="item-name">${task.name}</div>
-                            <div class="item-reward">+${task.reward} 🪙</div>
-                        </div>
-                    </div>
-                    ${isCompleted 
-                        ? '<button class="claim-btn" disabled>✓ Выполнено</button>'
-                        : `<button class="claim-btn" onclick="completeTask('daily', ${task.id})">Выполнить</button>`}
-                `;
-                dailyTasks.appendChild(card);
-            });
-
-            oneTimeTasksData.forEach(task => {
-                const isCompleted = gameState.completedOneTimeTasks.includes(task.id);
-                const card = document.createElement('div');
-                card.className = 'item-card';
-                card.innerHTML = `
-                    <div class="item-info">
-                        <div class="item-icon">${task.icon}</div>
-                        <div>
-                            <div class="item-name">${task.name}</div>
-                            <div class="item-reward">+${task.reward} 🪙</div>
-                        </div>
-                    </div>
-                    ${isCompleted 
-                        ? '<button class="claim-btn" disabled>✓ Выполнено</button>'
-                        : `<button class="claim-btn" onclick="completeTask('oneTime', ${task.id})">Выполнить</button>`}
-                `;
-                oneTimeTasks.appendChild(card);
-            });
-        }
-
-        function completeTask(type, id) {
-            if (type === 'daily') {
-                const task = dailyTasksData.find(t => t.id === id);
-                if (task && !gameState.completedDailyTasks.includes(id)) {
-                    gameState.balance += task.reward;
-                    gameState.completedDailyTasks.push(id);
-                    showToast(`✅ +${task.reward} 🪙`);
-                }
-            } else {
-                const task = oneTimeTasksData.find(t => t.id === id);
-                if (task && !gameState.completedOneTimeTasks.includes(id)) {
-                    gameState.balance += task.reward;
-                    gameState.completedOneTimeTasks.push(id);
-                    showToast(`✅ +${task.reward} 🪙`);
-                }
-            }
-            updateUI();
-            renderTasks();
-            saveGame();
-        }
-
-        // ====== БУСТЫ ======
-        const multiplierBoostsData = [
-            { id: 1, name: "Множитель ×2", cost: 500, icon: "🚀" },
-            { id: 2, name: "Множитель ×3", cost: 1000, icon: "💎" },
-            { id: 3, name: "Множитель ×5", cost: 2000, icon: "🔥" }
-        ];
-
-        const energyBoostsData = [
-            { id: 1, name: "+100 Энергии", cost: 300, icon: "⚡" },
-            { id: 2, name: "+250 Энергии", cost: 500, icon: "⚡" },
-            { id: 3, name: "+500 Энергии", cost: 1000, icon: "⚡" }
-        ];
-
-        function renderBoosts() {
-            const multiplierBoosts = document.getElementById('multiplierBoosts');
-            const energyBoosts = document.getElementById('energyBoosts');
-
-            multiplierBoosts.innerHTML = '';
-            energyBoosts.innerHTML = '';
-
-            multiplierBoostsData.forEach(boost => {
-                const card = document.createElement('div');
-                card.className = 'item-card';
-                card.innerHTML = `
-                    <div class="item-info">
-                        <div class="item-icon">${boost.icon}</div>
-                        <div>
-                            <div class="item-name">${boost.name}</div>
-                            <div class="item-description">Цена: ${boost.cost} 🪙</div>
-                        </div>
-                    </div>
-                    <button class="claim-btn" onclick="buyMultiplierBoost(${boost.id})">Купить</button>
-                `;
-                multiplierBoosts.appendChild(card);
-            });
-
-            energyBoostsData.forEach(boost => {
-                const card = document.createElement('div');
-                card.className = 'item-card';
-                card.innerHTML = `
-                    <div class="item-info">
-                        <div class="item-icon">${boost.icon}</div>
-                        <div>
-                            <div class="item-name">${boost.name}</div>
-                            <div class="item-description">Цена: ${boost.cost} 🪙</div>
-                        </div>
-                    </div>
-                    <button class="claim-btn" onclick="buyEnergyBoost(${boost.id})">Купить</button>
-                `;
-                energyBoosts.appendChild(card);
-            });
-        }
-
-        function buyMultiplierBoost(id) {
-            const boost = multiplierBoostsData.find(b => b.id === id);
-            if (boost && gameState.balance >= boost.cost) {
-                gameState.balance -= boost.cost;
-                gameState.multiplier += 1;
-                showToast(`🚀 Буст куплен! Множитель ×${gameState.multiplier}`);
-                updateUI();
-                renderBoosts();
-                saveGame();
-            } else {
-                showToast('❌ Недостаточно монет!');
-            }
-        }
-
-        function buyEnergyBoost(id) {
-            const boost = energyBoostsData.find(b => b.id === id);
-            if (boost && gameState.balance >= boost.cost) {
-                gameState.balance -= boost.cost;
-                gameState.maxEnergy += 100;
-                gameState.energy = gameState.maxEnergy;
-                showToast(`⚡ Энергия увеличена до ${gameState.maxEnergy}`);
-                updateUI();
-                renderBoosts();
-                saveGame();
-            } else {
-                showToast('❌ Недостаточно монет!');
-            }
-        }
-
-        // ====== ДРУЗЬЯ ======
-        function renderFriends() {
-            const friendsList = document.getElementById('friendsList');
-            const friendCount = document.getElementById('friendCount');
-            const friendEarnings = document.getElementById('friendEarnings');
-
-            friendsList.innerHTML = '';
-
-            if (gameState.friends.length === 0) {
-                friendsList.innerHTML = '<p style="text-align: center; opacity: 0.7;">Пока нет друзей</p>';
-            } else {
-                gameState.friends.forEach(friend => {
-                    const card = document.createElement('div');
-                    card.className = 'friend-card';
-                    card.innerHTML = `
-                        <div class="friend-info">
-                            <div class="friend-avatar">👤</div>
-                            <div>
-                                <div class="friend-name">${friend.name}</div>
-                                <div class="friend-reward">${friend.earnings} 🪙</div>
-                            </div>
-                        </div>
-                        <span>✅</span>
-                    `;
-                    friendsList.appendChild(card);
-                });
-            }
-
-            friendCount.textContent = gameState.friends.length;
-            friendEarnings.textContent = gameState.friends.reduce((sum, f) => sum + f.earnings, 0);
-        }
-
-        function copyReferralLink() {
-            const link = document.getElementById('referralLink');
-            link.select();
-            document.execCommand('copy');
-            showToast('📋 Ссылка скопирована!');
-        }
-
-        // ====== ТОСТ ======
-        function showToast(message) {
-            toast.textContent = message;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 2000);
-        }
-
-        // ====== ИНИЦИАЛИЗАЦИЯ ======
-        function init() {
-            loadGame();
-            updateUI();
-            renderTasks();
-            renderBoosts();
-            renderFriends();
-
-            // Установка реферальной ссылки
-            const refLink = document.getElementById('referralLink');
-            refLink.value = `https://t.me/geek_coin_bot?start=${Math.random().toString(36).slice(2)}`;
-        }
-
-        // Запуск
-        init();
-    </script>
 </body>
 </html>
