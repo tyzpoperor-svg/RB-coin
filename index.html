@@ -1,249 +1,187 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>💰 Койн Кликер</title>
-<style>
-* { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
-body { 
-    background: #000; 
-    overflow: hidden; 
-    font-family: Arial, sans-serif; 
-    height: 100vh; 
-    display: flex; 
-    justify-content: center; 
-    align-items: center;
-}
-canvas#stars { position: fixed; top: 0; left: 0; z-index: 0; }
-.container { 
-    position: relative; z-index: 1; 
-    text-align: center; width: 100%; max-width: 400px; 
-    padding: 20px; 
-}
-.star { position: absolute; color: #fff; opacity: 0.8; z-index: 0; }
-
-.coin {
-    width: 180px; height: 180px; border-radius: 50%;
-    cursor: pointer; transition: transform 0.1s;
-    box-shadow: 0 0 30px #ffd700, 0 0 60px #ffd700;
-    margin: 20px auto; display: block;
-    background: url('https://i.postimg.cc/h4MwsV6n/geekbot-ru-1788098202047.png') center/cover;
-}
-.coin:active { transform: scale(0.9); }
-.stats { color: #fff; margin: 10px; font-size: 24px; }
-.stats small { display: block; font-size: 14px; color: #aaa; }
-.energy-bar { 
-    background: #222; border-radius: 10px; padding: 3px; margin: 15px;
-}
-.energy-fill { 
-    background: linear-gradient(90deg, #00f, #0ff); height: 20px; 
-    border-radius: 8px; width: 100%; transition: width 0.3s;
-}
-.energy-text { color: #fff; margin: 10px; font-size: 14px; }
-.btn { 
-    background: linear-gradient(45deg, #0088cc, #00bfff); color: #fff; 
-    border: none; padding: 12px 20px; border-radius: 10px; 
-    margin: 5px; cursor: pointer; font-size: 14px; width: 90%;
-}
-.btn:hover { opacity: 0.8; }
-.btn.telegram { background: linear-gradient(45deg, #229ED9, #50a7e7); }
-.btn.referral { background: linear-gradient(45deg, #f093fb, #f5576c); }
-</style>
-</head>
-<body>
-
-<canvas id="stars"></canvas>
-
-<div class="container">
-    <h2 style="color:#fff; margin-bottom:5px;">💰 Койн Кликер</h2>
-
-    <!-- Статистика -->
-    <div class="stats">
-        <span id="coinCount">0.000</span>
-        <small>KOIN</small>
-    </div>
-
-    <!-- Монета -->
-    <div class="coin" id="coin"></div>
-
-    <!-- Энергия -->
-    <div class="energy-bar">
-        <div class="energy-fill" id="energyFill"></div>
-    </div>
-    <div class="energy-text" id="energyText">⚡ 10 / 10</div>
-
-    <!-- Реферальная ссылка -->
-    <button class="btn referral" onclick="copyReferral()">🎁 Реферальная ссылка</button>
-    <small style="color:#aaa; display:block; margin:5px;">Пригласите друзей: <span id="refCount">0</span></small>
-
-    <!-- Привязка кошелька -->
-    <button class="btn telegram" onclick="connectWallet()">💎 Привязать TON-кошелёк</button>
-
-    <!-- Регистрация -->
-    <button class="btn" onclick="registerAccount()">👤 Регистрация / Привязка Telegram</button>
-
-    <!-- Инфо -->
-    <small style="color:#666; display:block; margin-top:15px;">
-        ⚡ Энергия: +1 / 5 сек | 🪙 1 тап = 0.001 KOIN
-    </small>
-</div>
-
 <script>
-// ====== ЧАСТЬ 3: ЖИВЫЕ ОБОИ - ПАДАЮЩИЕ ЗВЁЗДЫ ======
-const canvas = document.getElementById('stars');
-const ctx = canvas.getContext('2d');
-let stars = [];
-let animFrame;
+// ====== ЧАСТЬ 1: ОСНОВНЫЕ НАСТРОЙКИ ======
+const TAP_VALUE = 0.001; // Сколько даёт один клик
+const MAX_ENERGY = 10;   // Максимум энергии
+const ENERGY_REGEN_TIME = 5000; // 5 секунд
 
-function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
-
-function createStar() {
-    return {
-        x: Math.random() * canvas.width,
-        y: -10,
-        speed: Math.random() * 2 + 1,
-        size: Math.random() * 2 + 1,
-        opacity: Math.random() * 0.8 + 0.2
-    };
-}
-
-function initStars(count) {
-    stars = [];
-    for (let i = 0; i < count; i++) {
-        const s = createStar();
-        s.y = Math.random() * canvas.height;
-        stars.push(s);
-    }
-}
-
-function drawStars() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    stars.forEach(s => {
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255,255,255,${s.opacity})`;
-        ctx.fill();
-        s.y += s.speed;
-        if (s.y > canvas.height + 10) { 
-            Object.assign(s, createStar()); 
-        }
-    });
-    animFrame = requestAnimationFrame(drawStars);
-}
-initStars(150);
-drawStars();
-
-// ====== ЧАСТЬ 4: ОСНОВНЫЕ ПЕРЕМЕННЫЕ ИГРЫ ======
-const DEFAULT_STATE = {
+let state = {
     coins: 0,
-    energy: 10,
-    maxEnergy: 10,
-    energyRegenTime: 5000,
+    energy: MAX_ENERGY,
     refCount: 0,
     telegramId: null,
     username: null,
     registered: false,
-    wallet: null
+    wallet: null,
+    lastUpdate: Date.now()
 };
 
-let state = { ...DEFAULT_STATE };
-let energyRegenTimer = null;
-const TAP_VALUE = 0.001;
-
-// Элементы DOM
-const coin = document.getElementById('coin');
-const coinCount = document.getElementById('coinCount');
-const energyText = document.getElementById('energyText');
-const energyFill = document.getElementById('energyFill');
-const refCountEl = document.getElementById('refCount');
-
-// ====== ЧАСТЬ 5: СОХРАНЕНИЕ И ЗАГРУЗКА ======
-function saveState() {
-    localStorage.setItem('coinClickerState', JSON.stringify(state));
-}
-
-function loadState() {
-    const saved = localStorage.getItem('coinClickerState');
-    if (saved) {
-        try {
-            state = { ...DEFAULT_STATE, ...JSON.parse(saved) };
-        } catch(e) { console.error('Ошибка загрузки'); }
-    }
-}
-
+// ====== ЧАСТЬ 2: ИНИЦИАЛИЗАЦИЯ TELEGRAM ======
 function initTelegram() {
     if (window.Telegram?.WebApp) {
         const tg = window.Telegram.WebApp;
         tg.ready();
+        tg.expand();
+
         const user = tg.initDataUnsafe?.user;
         if (user) {
             state.telegramId = user.id;
             state.username = user.username || user.first_name;
             state.registered = true;
-            saveState();
-            syncFromServer();
+            console.log('Пользователь:', state.username, 'ID:', state.telegramId);
         }
+
+        // Проверяем реферальную ссылку
+        const startParam = tg.initDataUnsafe?.start_param;
+        if (startParam && startParam !== state.telegramId) {
+            // Отправляем на сервер информацию о реферале
+            sendReferralToServer(startParam);
+        }
+
+        // Загружаем данные с сервера
+        loadFromTelegramServer();
+    } else {
+        // Fallback для браузера (тест)
+        console.log('Telegram WebApp не найден, работаем локально');
+        loadLocalState();
     }
 }
 
-// ====== ЧАСТЬ 6: РЕФЕРАЛЬНАЯ СИСТЕМА ======
+// ====== ЧАСТЬ 3: СИНХРОНИЗАЦИЯ С TELEGRAM CLOUD ======
+async function saveToTelegramServer() {
+    if (!window.Telegram?.WebApp) return;
+
+    try {
+        const data = {
+            coins: state.coins,
+            refCount: state.refCount,
+            wallet: state.wallet,
+            lastUpdate: Date.now()
+        };
+
+        // Сохраняем в Telegram Cloud Storage
+        window.Telegram.WebApp.CloudStorage?.setItem('gameData', JSON.stringify(data));
+
+        // Отправляем через Bot API (если есть сервер)
+        if (window.Telegram.WebApp.initDataUnsafe?.user) {
+            const userId = window.Telegram.WebApp.initDataUnsafe.user.id;
+            await fetch(`https://your-server.com/api/save?user=${userId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            }).catch(err => console.log('Сервер недоступен, использую Cloud Storage'));
+        }
+    } catch (e) {
+        console.log('Ошибка сохранения:', e);
+    }
+}
+
+async function loadFromTelegramServer() {
+    if (!window.Telegram?.WebApp) {
+        loadLocalState();
+        return;
+    }
+
+    try {
+        // Пытаемся загрузить из Telegram Cloud Storage
+        const cloudData = await window.Telegram.WebApp.CloudStorage?.getItem('gameData');
+        if (cloudData) {
+            const parsed = JSON.parse(cloudData);
+            state.coins = parsed.coins || 0;
+            state.refCount = parsed.refCount || 0;
+            state.wallet = parsed.wallet || null;
+        }
+
+        // Пытаемся загрузить с сервера (если есть)
+        const userId = window.Telegram.WebApp.initDataUnsafe?.user?.id;
+        if (userId) {
+            fetch(`https://your-server.com/api/load?user=${userId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data) {
+                        state.coins = data.coins || 0;
+                        state.refCount = data.refCount || 0;
+                        state.wallet = data.wallet || null;
+                    }
+                    updateUI();
+                })
+                .catch(() => {
+                    updateUI();
+                });
+        } else {
+            updateUI();
+        }
+    } catch (e) {
+        console.log('Ошибка загрузки:', e);
+        loadLocalState();
+        updateUI();
+    }
+}
+
+// ====== ЧАСТЬ 4: РЕФЕРАЛЬНАЯ СИСТЕМА ======
 function getReferralLink() {
     const userId = state.telegramId || generateLocalId();
-    const baseUrl = 'https://t.me/RB_coin_official_bot?start='; // ← Бот: @RB_coin_official_bot
+    const baseUrl = 'https://t.me/RB_coin_official_bot?start='; // ← ВАШ БОТ
     return baseUrl + userId;
 }
 
 function generateLocalId() {
     if (!localStorage.getItem('localUserId')) {
-        localStorage.setItem('localUserId', Math.random().toString(36).slice(2));
+        localStorage.setItem('localUserId', 'user_' + Math.random().toString(36).slice(2));
     }
     return localStorage.getItem('localUserId');
 }
 
-function checkReferral() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const startParam = urlParams.get('start') || 
-                      window.Telegram?.WebApp?.initDataUnsafe?.start_param;
+async function sendReferralToServer(referrerId) {
+    if (!window.Telegram?.WebApp) return;
 
-    if (startParam) {
-        const referrerId = startParam;
+    const user = window.Telegram.WebApp.initDataUnsafe?.user;
+    if (!user) return;
+
+    try {
+        // Отправляем информацию о реферале
+        await fetch(`https://your-server.com/api/referral`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                referrer_id: referrerId,
+                new_user_id: user.id,
+                username: user.username || user.first_name
+            })
+        });
+
+        // Показываем бонус
+        state.coins += 0.5; // Бонус за реферала
+        saveState();
+        updateUI();
+        showToast('🎁 +0.5 KOIN за переход по реферальной ссылке!');
+    } catch (e) {
+        console.log('Реферальная система не работает без сервера');
+        // Fallback: сохраняем в localStorage
         localStorage.setItem('referredBy', referrerId);
         state.refCount++;
         saveState();
-        console.log('Вы пришли по рефссылке! Реферер:', referrerId);
-        showToast('🎁 Вы пришли по реферальной ссылке!');
+        updateUI();
     }
 }
 
-// ====== ЧАСТЬ 7: ЭНЕРГИЯ И КЛИКИ ======
-function updateEnergyDisplay() {
-    energyText.textContent = `⚡ ${Math.floor(state.energy)} / ${state.maxEnergy}`;
-    energyFill.style.width = (state.energy / state.maxEnergy * 100) + '%';
-
-    if (state.energy <= 0) {
-        energyFill.style.background = '#f00';
-    } else {
-        energyFill.style.background = 'linear-gradient(90deg, #00f, #0ff)';
-    }
+// ====== ЧАСТЬ 5: ЛОКАЛЬНОЕ СОХРАНЕНИЕ (FALLBACK) ======
+function saveState() {
+    localStorage.setItem('coinClickerState', JSON.stringify(state));
+    saveToTelegramServer(); // Также сохраняем в Telegram Cloud
 }
 
-function startEnergyRegen() {
-    if (energyRegenTimer) clearInterval(energyRegenTimer);
-    energyRegenTimer = setInterval(() => {
-        if (state.energy < state.maxEnergy) {
-            state.energy += 1;
-            saveState();
-            updateEnergyDisplay();
+function loadLocalState() {
+    const saved = localStorage.getItem('coinClickerState');
+    if (saved) {
+        try {
+            state = { ...state, ...JSON.parse(saved) };
+        } catch(e) {
+            console.error('Ошибка загрузки');
         }
-    }, state.energyRegenTime);
+    }
 }
 
+// ====== ЧАСТЬ 6: ИГРОВАЯ ЛОГИКА ======
 function tapCoin() {
     if (state.energy < 1) {
         showToast('Нет энергии! Подождите ⚡');
@@ -252,18 +190,41 @@ function tapCoin() {
 
     state.energy -= 1;
     state.coins += TAP_VALUE;
-    saveState();
 
-    coinCount.textContent = state.coins.toFixed(3);
-    updateEnergyDisplay();
-
+    // Анимация клика
     coin.style.transform = 'scale(0.9)';
     setTimeout(() => { coin.style.transform = 'scale(1)'; }, 100);
 
+    // Плавающий текст
     showFloatingNumber('+' + TAP_VALUE);
+
+    saveState();
+    updateUI();
 }
 
-// ====== ЧАСТЬ 8: ДОПОЛНИТЕЛЬНЫЕ ФУНКЦИИ ======
+function updateEnergy() {
+    if (state.energy < MAX_ENERGY) {
+        state.energy += 1;
+        saveState();
+        updateUI();
+    }
+}
+
+function updateUI() {
+    coinCount.textContent = state.coins.toFixed(3);
+    energyText.textContent = `⚡ ${Math.floor(state.energy)} / ${MAX_ENERGY}`;
+    energyFill.style.width = (state.energy / MAX_ENERGY * 100) + '%';
+
+    if (state.energy <= 0) {
+        energyFill.style.background = '#f00';
+    } else {
+        energyFill.style.background = 'linear-gradient(90deg, #00f, #0ff)';
+    }
+
+    refCountEl.textContent = state.refCount;
+}
+
+// ====== ЧАСТЬ 7: ДОПОЛНИТЕЛЬНЫЕ ФУНКЦИИ ======
 function showFloatingNumber(text) {
     const div = document.createElement('div');
     div.textContent = text;
@@ -291,19 +252,13 @@ function showToast(msg) {
     setTimeout(() => toast.remove(), 2000);
 }
 
-const style = document.createElement('style');
-style.textContent = `
-@keyframes floatUp { 
-    from { opacity: 1; transform: translate(-50%, 0); }
-    to { opacity: 0; transform: translate(-50%, -80px); }
+function copyReferral() {
+    const link = getReferralLink();
+    navigator.clipboard.writeText(link).then(() => {
+        showToast('🔗 Ссылка скопирована!');
+    });
 }
-@keyframes slideDown {
-    from { transform: translate(-50%, -100%); }
-    to { transform: translate(-50%, 0); }
-}`;
-document.head.appendChild(style);
 
-// ====== ЧАСТЬ 9: КОШЕЛЁК И РЕГИСТРАЦИЯ ======
 function connectWallet() {
     if (window.Telegram?.WebApp) {
         window.Telegram.WebApp.sendData(JSON.stringify({ action: 'connect_wallet' }));
@@ -313,6 +268,7 @@ function connectWallet() {
         if (wallet) {
             state.wallet = wallet;
             saveState();
+            updateUI();
             showToast('✅ Кошелёк привязан: ' + wallet.slice(0, 6) + '...');
         }
     }
@@ -325,13 +281,13 @@ function registerAccount() {
     }
 
     if (window.Telegram?.WebApp) {
-        const tg = window.Telegram.WebApp;
-        const user = tg.initDataUnsafe?.user;
+        const user = window.Telegram.WebApp.initDataUnsafe?.user;
         if (user) {
             state.telegramId = user.id;
             state.username = user.username || user.first_name;
             state.registered = true;
             saveState();
+            updateUI();
             showToast('✅ Аккаунт привязан к Telegram!');
         }
     } else {
@@ -340,41 +296,26 @@ function registerAccount() {
             state.username = username;
             state.registered = true;
             saveState();
+            updateUI();
             showToast('✅ Аккаунт создан!');
         }
     }
 }
 
-function syncFromServer() {
-    loadState();
-    updateAllUI();
-}
+// ====== ЧАСТЬ 8: ЗАПУСК ======
+// Элементы DOM
+const coin = document.getElementById('coin');
+const coinCount = document.getElementById('coinCount');
+const energyText = document.getElementById('energyText');
+const energyFill = document.getElementById('energyFill');
+const refCountEl = document.getElementById('refCount');
 
-// ====== ЧАСТЬ 10: ОБРАБОТЧИКИ И ЗАПУСК ======
-function copyReferral() {
-    const link = getReferralLink();
-    navigator.clipboard.writeText(link).then(() => {
-        showToast('🔗 Ссылка скопирована!');
-    });
-}
-
-function updateAllUI() {
-    coinCount.textContent = state.coins.toFixed(3);
-    updateEnergyDisplay();
-    refCountEl.textContent = state.refCount;
-}
-
+// События
 coin.addEventListener('click', tapCoin);
 
-loadState();
-initTelegram();
-checkReferral();
-updateAllUI();
-startEnergyRegen();
+// Автовосстановление энергии каждые 5 сек
+setInterval(updateEnergy, ENERGY_REGEN_TIME);
 
-window.addEventListener('beforeunload', () => {
-    if (energyRegenTimer) clearInterval(energyRegenTimer);
-});
+// Запуск
+initTelegram();
 </script>
-</body>
-</html>
