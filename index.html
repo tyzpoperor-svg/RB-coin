@@ -3,64 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>💰 Coin Clicker - Telegram Mini App</title>
+    <title>Geek Coin</title>
     <style>
+        /* ====== БАЗОВЫЕ СТИЛИ ====== */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(180deg, #2c3e50 0%, #3498db 100%);
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: white;
             overflow: hidden;
-            user-select: none;
-            -webkit-user-select: none;
+            touch-action: none;
         }
 
-        .app-container {
-            width: 100%;
-            max-width: 480px;
-            height: 100vh;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .page-container {
-            display: flex;
-            width: 200%;
-            height: 100%;
-            transition: transform 0.3s ease;
-        }
-
-        .page {
-            width: 50%;
-            height: 100%;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            overflow-y: auto;
-        }
-
-        /* ====== СТИЛИ ДЛЯ ПЕРВОЙ СТРАНИЦЫ (КЛИКЕР) ====== */
+        /* ====== ШАПКА ====== */
         .header {
-            width: 100%;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 0;
-            margin-bottom: 20px;
+            padding: 20px 20px 10px;
+            background: rgba(0, 0, 0, 0.3);
         }
 
-        .user-info {
+        .header .user-info {
             display: flex;
             align-items: center;
             gap: 10px;
@@ -70,469 +40,546 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
+            background: #2ecc71;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-weight: bold;
             font-size: 20px;
-            overflow: hidden;
-        }
-
-        .user-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
         }
 
         .user-name {
+            font-weight: bold;
             font-size: 16px;
-            font-weight: 600;
         }
 
         .stats {
-            width: 100%;
             display: flex;
-            justify-content: space-between;
+            gap: 15px;
             align-items: center;
-            margin-bottom: 20px;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-        }
-
-        .coins-display {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        .coins-icon {
-            font-size: 28px;
-        }
-
-        .energy-display {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 18px;
-        }
-
-        .energy-bar {
-            width: 100px;
-            height: 20px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .energy-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #f093fb, #f5576c);
-            border-radius: 10px;
-            transition: width 0.3s ease;
-        }
-
-        .coin-container {
-            width: 250px;
-            height: 250px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            position: relative;
-            margin: 20px 0;
-        }
-
-        .coin {
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #ffd700, #ffb700 50%, #ff8c00);
-            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3), inset 0 -10px 20px rgba(0, 0, 0, 0.1), inset 0 10px 20px rgba(255, 255, 255, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 60px;
-            transition: transform 0.1s ease;
-            position: relative;
-            border: 8px solid rgba(255, 215, 0, 0.5);
-        }
-
-        .coin::before {
-            content: '';
-            position: absolute;
-            top: -8px;
-            left: -8px;
-            right: -8px;
-            bottom: -8px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05));
-            z-index: -1;
-        }
-
-        .coin:active {
-            transform: scale(0.9);
-        }
-
-        .tap-animation {
-            position: absolute;
-            font-size: 24px;
-            font-weight: bold;
-            color: #ffd700;
-            pointer-events: none;
-            animation: floatUp 1s ease-out forwards;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        @keyframes floatUp {
-            0% {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-            100% {
-                opacity: 0;
-                transform: translateY(-100px) scale(1.5);
-            }
-        }
-
-        .boost-section {
-            width: 100%;
-            margin-top: 20px;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-        }
-
-        .boost-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-
-        .boost-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-        }
-
-        .boost-card {
-            padding: 15px 10px;
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .boost-card:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: scale(1.05);
-        }
-
-        .boost-card.disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .boost-emoji {
-            font-size: 24px;
-            margin-bottom: 5px;
-        }
-
-        .boost-name {
-            font-size: 12px;
-            text-align: center;
-            margin-bottom: 5px;
-        }
-
-        .boost-price {
-            font-size: 14px;
-            font-weight: bold;
-            color: #ffd700;
-        }
-
-        /* ====== СТИЛИ ДЛЯ ВТОРОЙ СТРАНИЦЫ (ССЫЛКИ) ====== */
-        .referral-section {
-            width: 100%;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            backdrop-filter: blur(10px);
-            margin-top: 20px;
-        }
-
-        .referral-title {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        .referral-stats {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 20px;
         }
 
         .stat-item {
             text-align: center;
         }
 
-        .stat-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #ffd700;
-        }
-
         .stat-label {
             font-size: 12px;
-            color: rgba(255, 255, 255, 0.7);
+            opacity: 0.8;
         }
 
-        .referral-link-container {
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        /* ====== БАЛАНС ====== */
+        .balance-section {
+            text-align: center;
+            padding: 15px 20px;
+        }
+
+        .balance {
+            font-size: 42px;
+            font-weight: bold;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .balance-label {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        /* ====== КОНТЕЙНЕР МОНЕТЫ ====== */
+        .coin-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px 0;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+            position: relative;
+            min-height: 300px;
+        }
+
+        .coin {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #FFD700 0%, #FFA500 50%, #FF8C00 100%);
+            box-shadow: 
+                0 10px 40px rgba(255, 215, 0, 0.4),
+                inset 0 -10px 20px rgba(255, 140, 0, 0.3),
+                inset 0 10px 20px rgba(255, 255, 255, 0.3);
+            position: relative;
+            transition: transform 0.1s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: coinPulse 2s ease-in-out infinite;
+        }
+
+        .coin::before {
+            content: '';
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.5);
+            box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .coin::after {
+            content: '💰';
+            font-size: 60px;
+            text-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .coin:active {
+            transform: scale(0.92);
+            box-shadow: 
+                0 5px 20px rgba(255, 215, 0, 0.3),
+                inset 0 -5px 10px rgba(255, 140, 0, 0.3),
+                inset 0 5px 10px rgba(255, 255, 255, 0.3);
+        }
+
+        /* Анимация тапа */
+        .tap-animation {
+            position: absolute;
+            font-size: 20px;
+            font-weight: bold;
+            color: #FFD700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            pointer-events: none;
+            animation: tapFloat 1s ease-out forwards;
+            z-index: 10;
+        }
+
+        @keyframes tapFloat {
+            0% {
+                transform: translateY(0) scale(0.5);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-80px) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        @keyframes coinPulse {
+            0%, 100% { 
+                transform: scale(1);
+            }
+            50% { 
+                transform: scale(1.05);
+            }
+        }
+
+        /* ====== ИНФОРМАЦИЯ ОБ ЭНЕРГИИ ====== */
+        .energy-section {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            margin: 20px;
+            border-radius: 15px;
+        }
+
+        .energy-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .energy-bar {
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .energy-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b6b, #ffa500);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .energy-label {
+            font-size: 14px;
+        }
+
+        .energy-count {
+            font-weight: bold;
+        }
+
+        /* ====== НИЖНЕЕ МЕНЮ ====== */
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .nav-item {
             display: flex;
             flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .nav-item.active {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .nav-item .icon {
+            font-size: 24px;
+        }
+
+        .nav-item .label {
+            font-size: 12px;
+        }
+
+        /* ====== ПАНЕЛИ ====== */
+        .panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            z-index: 100;
+            display: none;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .panel-header h2 {
+            font-size: 24px;
+        }
+
+        .close-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Табы */
+        .tabs {
+            display: flex;
             gap: 10px;
             margin-bottom: 20px;
         }
 
-        .referral-input-group {
-            display: flex;
-            gap: 10px;
-        }
-
-        .referral-link-input {
+        .tab {
             flex: 1;
             padding: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
             background: rgba(255, 255, 255, 0.1);
-            color: white;
-            font-size: 14px;
-            outline: none;
-        }
-
-        .copy-button {
-            padding: 12px 20px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
             border: none;
             border-radius: 10px;
             color: white;
-            font-size: 14px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
+            text-align: center;
+            font-size: 14px;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .copy-button:hover {
-            transform: scale(1.05);
+        .tab.active {
+            background: rgba(255, 255, 255, 0.3);
         }
 
-        .auto-collect {
+        /* Список заданий/бустов */
+        .item-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .item-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .item-info {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            margin-top: 10px;
+            gap: 15px;
         }
 
-        .auto-collect-button {
-            padding: 10px 20px;
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            border: none;
-            border-radius: 10px;
-            color: white;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
+        .item-icon {
+            font-size: 30px;
         }
 
-        .auto-collect-button:hover {
-            transform: scale(1.05);
-        }
-
-        .auto-collect-button.active {
-            background: linear-gradient(135deg, #f44336, #e53935);
-        }
-
-        /* ====== ДОПОЛНИТЕЛЬНЫЕ СТИЛИ ====== */
-        .swipe-indicator {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.7);
-            text-align: center;
-            padding: 8px 16px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 20px;
-            z-index: 100;
-            pointer-events: none;
-        }
-
-        .telegram-button {
-            margin-top: auto;
-            padding: 15px;
-            background: #0088cc;
-            border: none;
-            border-radius: 15px;
-            color: white;
+        .item-name {
+            font-weight: bold;
             font-size: 16px;
+        }
+
+        .item-description {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .item-reward {
+            color: #FFD700;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .claim-btn {
+            background: linear-gradient(90deg, #2ecc71, #27ae60);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
             cursor: pointer;
-            width: 100%;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            margin-top: 20px;
+            font-weight: bold;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .telegram-button:hover {
-            background: #0077b5;
-            transform: scale(1.02);
+        .claim-btn:disabled {
+            background: gray;
+            cursor: not-allowed;
         }
 
-        @media (max-width: 768px) {
-            .coin {
-                width: 150px;
-                height: 150px;
-                font-size: 45px;
-            }
+        /* Друзья */
+        .friend-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-            .coin-container {
-                width: 200px;
-                height: 200px;
-            }
+        .friend-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
 
-            h1 {
-                font-size: 1.8em;
-            }
+        .friend-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #3498db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+        }
 
-            .boost-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
+        .friend-name {
+            font-weight: bold;
+        }
+
+        .friend-reward {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        /* ====== ТОСТ УВЕДОМЛЕНИЯ ====== */
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: #FFD700;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            z-index: 200;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        /* ====== РЕФЕРАЛЬНЫЕ ====== */
+        .referral-link-box {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .referral-link {
+            flex: 1;
+            font-size: 12px;
+            word-break: break-all;
+            background: transparent;
+            border: none;
+            color: white;
+        }
+
+        .copy-btn {
+            background: #3498db;
+            border: none;
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
         }
     </style>
 </head>
 <body>
-    <div class="app-container" id="appContainer">
-        <div class="page-container" id="pageContainer">
-            <!-- Первая страница: Кликер -->
-            <div class="page" id="clickerPage">
-                <div class="header">
-                    <div class="user-info">
-                        <div class="user-avatar" id="userAvatar">👤</div>
-                        <div class="user-name" id="userName">Пользователь</div>
-                    </div>
-                    <div class="settings-icon" onclick="shareApp()">📤</div>
-                </div>
-
-                <div class="stats">
-                    <div class="coins-display">
-                        <span class="coins-icon">💰</span>
-                        <span id="coinsCount">0.00</span>
-                    </div>
-                    <div class="energy-display">
-                        <span>⚡</span>
-                        <div class="energy-bar">
-                            <div class="energy-fill" id="energyFill" style="width: 100%"></div>
-                        </div>
-                        <span id="energyCount">100</span>
-                    </div>
-                </div>
-
-                <div class="coin-container" id="coinContainer">
-                    <div class="coin">🪙</div>
-                </div>
-
-                <div class="boost-section">
-                    <div class="boost-title">🚀 Бусты</div>
-                    <div class="boost-grid">
-                        <div class="boost-card" id="boostEnergy" onclick="buyBoost('energy')">
-                            <span class="boost-emoji">⚡</span>
-                            <span class="boost-name">Макс. энергия</span>
-                            <span class="boost-price" id="energyBoostPrice">💰 50</span>
-                        </div>
-                        <div class="boost-card" id="boostRecharge" onclick="buyBoost('recharge')">
-                            <span class="boost-emoji">🔋</span>
-                            <span class="boost-name">Восстановление</span>
-                            <span class="boost-price" id="rechargeBoostPrice">💰 30</span>
-                        </div>
-                        <div class="boost-card" id="boostMultiplier" onclick="buyBoost('multiplier')">
-                            <span class="boost-emoji">✨</span>
-                            <span class="boost-name">Множитель x2</span>
-                            <span class="boost-price" id="multiplierBoostPrice">💰 100</span>
-                        </div>
-                    </div>
-                </div>
+    <!-- ШАПКА -->
+    <div class="header">
+        <div class="user-info">
+            <div class="user-avatar" id="userAvatar">👤</div>
+            <div>
+                <div class="user-name" id="userName">Player</div>
             </div>
-
-            <!-- Вторая страница: Ссылки -->
-            <div class="page" id="referralPage">
-                <h1 style="margin: 20px 0; font-size: 2em;">👥 Реферальная система</h1>
-
-                <div class="referral-section">
-                    <div class="referral-title">📊 Статистика</div>
-                    <div class="referral-stats">
-                        <div class="stat-item">
-                            <div class="stat-value" id="referralCount">0</div>
-                            <div class="stat-label">Приглашено</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value" id="referralEarnings">0</div>
-                            <div class="stat-label">Заработано</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value" id="totalEarnings">0</div>
-                            <div class="stat-label">Всего монет</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="referral-section">
-                    <div class="referral-title">🔗 Ваша ссылка</div>
-                    <div class="referral-link-container">
-                        <div class="referral-input-group">
-                            <input type="text" class="referral-link-input" id="referralLink" readonly>
-                            <button class="copy-button" onclick="copyReferralLink()">📋 Копировать</button>
-                        </div>
-                        <button class="copy-button" onclick="shareReferralLink()" style="background: linear-gradient(135deg, #0088cc, #005a8c);">
-                            📤 Поделиться в Telegram
-                        </button>
-                    </div>
-                </div>
-
-                <div class="referral-section">
-                    <div class="referral-title">⚙️ Автосбор</div>
-                    <div class="auto-collect">
-                        <div>
-                            <div>💰 Автосбор: <span id="autoCollectStatus">Выключен</span></div>
-                            <small style="color: rgba(255,255,255,0.7);">Собирает 1 монету в минуту</small>
-                        </div>
-                        <button class="auto-collect-button" id="autoCollectButton" onclick="toggleAutoCollect()">
-                            Включить (💰 500)
-                        </button>
-                    </div>
-                </div>
-
-                <button class="telegram-button" onclick="openTelegram()">
-                    📱 Открыть в Telegram
-                </button>
+        </div>
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-label">Уровень</div>
+                <div class="stat-value" id="level">1</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Множитель</div>
+                <div class="stat-value" id="multiplier">×1</div>
             </div>
         </div>
     </div>
 
-    <div class="swipe-indicator">← Свайп влево для перехода →</div>
+    <!-- БАЛАНС -->
+    <div class="balance-section">
+        <div class="balance" id="balance">0</div>
+        <div class="balance-label">💰 Geek Coins</div>
+    </div>
+
+    <!-- МОНЕТА -->
+    <div class="coin-container" id="coinContainer">
+        <div class="coin" id="coin"></div>
+    </div>
+
+    <!-- ЭНЕРГИЯ -->
+    <div class="energy-section">
+        <div class="energy-header">
+            <span class="energy-label">⚡ Энергия</span>
+            <span class="energy-count" id="energyCount">500/500</span>
+        </div>
+        <div class="energy-bar">
+            <div class="energy-fill" id="energyFill" style="width: 100%"></div>
+        </div>
+    </div>
+
+    <!-- НИЖНЕЕ МЕНЮ -->
+    <div class="bottom-nav">
+        <div class="nav-item active" data-panel="main">
+            <span class="icon">🏠</span>
+            <span class="label">Главная</span>
+        </div>
+        <div class="nav-item" data-panel="tasks">
+            <span class="icon">📋</span>
+            <span class="label">Задания</span>
+        </div>
+        <div class="nav-item" data-panel="boosts">
+            <span class="icon">⚡</span>
+            <span class="label">Бусты</span>
+        </div>
+        <div class="nav-item" data-panel="friends">
+            <span class="icon">👥</span>
+            <span class="label">Друзья</span>
+        </div>
+    </div>
+
+    <!-- ПАНЕЛЬ ЗАДАНИЙ -->
+    <div class="panel" id="tasksPanel">
+        <div class="panel-header">
+            <h2>📋 Задания</h2>
+            <button class="close-btn" onclick="closePanel('tasksPanel')">✕</button>
+        </div>
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('daily')">Ежедневные</button>
+            <button class="tab" onclick="showTab('one-time')">Разовые</button>
+        </div>
+        <div id="dailyTasks" class="item-list"></div>
+        <div id="oneTimeTasks" class="item-list" style="display: none"></div>
+    </div>
+
+    <!-- ПАНЕЛЬ БУСТОВ -->
+    <div class="panel" id="boostsPanel">
+        <div class="panel-header">
+            <h2>⚡ Бусты</h2>
+            <button class="close-btn" onclick="closePanel('boostsPanel')">✕</button>
+        </div>
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('multiplier')">Множитель</button>
+            <button class="tab" onclick="showTab('energy')">Энергия</button>
+        </div>
+        <div id="multiplierBoosts" class="item-list"></div>
+        <div id="energyBoosts" class="item-list" style="display: none"></div>
+    </div>
+
+    <!-- ПАНЕЛЬ ДРУЗЕЙ -->
+    <div class="panel" id="friendsPanel">
+        <div class="panel-header">
+            <h2>👥 Друзья</h2>
+            <button class="close-btn" onclick="closePanel('friendsPanel')">✕</button>
+        </div>
+
+        <div class="referral-link-box">
+            <input type="text" id="referralLink" readonly>
+            <button class="copy-btn" onclick="copyReferralLink()">📋</button>
+        </div>
+
+        <h3>Статистика</h3>
+        <div style="margin-bottom: 20px;">
+            <p>Приглашено друзей: <span id="friendCount">0</span></p>
+            <p>Заработано за друзей: <span id="friendEarnings">0</span></p>
+        </div>
+
+        <div id="friendsList" class="item-list"></div>
+    </div>
+
+    <!-- ТОСТ -->
+    <div class="toast" id="toast"></div>
+
+    <!-- ПОДКЛЮЧЕНИЕ JAVASCRIPT -->
+    <script>
 <script>
     // Telegram Mini App API
     const tg = window.Telegram.WebApp;
@@ -930,3 +977,367 @@
     // Запуск приложения после загрузки страницы
     document.addEventListener('DOMContentLoaded', init);
 </script>
+javascript
+Копировать
+        // ====== СОСТОЯНИЕ ИГРЫ ======
+        let gameState = {
+            balance: 0,
+            energy: 500,
+            maxEnergy: 500,
+            multiplier: 1,
+            level: 1,
+            completedDailyTasks: [],
+            completedOneTimeTasks: [],
+            friends: []
+        };
+
+        // ====== DOM ЭЛЕМЕНТЫ ======
+        const balanceEl = document.getElementById('balance');
+        const energyCountEl = document.getElementById('energyCount');
+        const energyFillEl = document.getElementById('energyFill');
+        const levelEl = document.getElementById('level');
+        const multiplierEl = document.getElementById('multiplier');
+        const coinContainer = document.getElementById('coinContainer');
+        const coin = document.getElementById('coin');
+        const toast = document.getElementById('toast');
+
+        // ====== СОХРАНЕНИЕ ИГРЫ ======
+        function saveGame() {
+            localStorage.setItem('geekCoinSave', JSON.stringify(gameState));
+        }
+
+        function loadGame() {
+            const saved = localStorage.getItem('geekCoinSave');
+            if (saved) {
+                gameState = { ...gameState, ...JSON.parse(saved) };
+            }
+        }
+
+        // ====== ОБНОВЛЕНИЕ ИНТЕРФЕЙСА ======
+        function updateUI() {
+            balanceEl.textContent = Math.floor(gameState.balance);
+            energyCountEl.textContent = `${Math.floor(gameState.energy)}/${gameState.maxEnergy}`;
+            energyFillEl.style.width = `${(gameState.energy / gameState.maxEnergy) * 100}%`;
+            levelEl.textContent = gameState.level;
+            multiplierEl.textContent = `×${gameState.multiplier}`;
+        }
+
+        // ====== ТАП ПО МОНЕТЕ ======
+        coinContainer.addEventListener('click', (e) => {
+            if (gameState.energy >= 1) {
+                const tapValue = 1 * gameState.multiplier;
+                gameState.balance += tapValue;
+                gameState.energy -= 1;
+
+                // Анимация
+                createTapAnimation(e.clientX, e.clientY, `+${tapValue}`);
+                coin.style.transform = 'scale(0.9)';
+                setTimeout(() => {
+                    coin.style.transform = 'scale(1)';
+                }, 100);
+
+                updateUI();
+                checkLevelUp();
+                saveGame();
+            } else {
+                showToast('⚡ Нет энергии!');
+            }
+        });
+
+        // ====== АНИМАЦИЯ ТАПА ======
+        function createTapAnimation(x, y, text) {
+            const anim = document.createElement('div');
+            anim.className = 'tap-animation';
+            anim.textContent = text;
+            anim.style.left = (x - 20) + 'px';
+            anim.style.top = (y - 20) + 'px';
+            document.body.appendChild(anim);
+
+            setTimeout(() => anim.remove(), 1000);
+        }
+
+        // ====== ВОССТАНОВЛЕНИЕ ЭНЕРГИИ ======
+        setInterval(() => {
+            if (gameState.energy < gameState.maxEnergy) {
+                gameState.energy += 1;
+                updateUI();
+                saveGame();
+            }
+        }, 3000);
+
+        // ====== ПРОВЕРКА УРОВНЯ ======
+        function checkLevelUp() {
+            const newLevel = Math.floor(gameState.balance / 1000) + 1;
+            if (newLevel > gameState.level) {
+                gameState.level = newLevel;
+                gameState.multiplier = newLevel;
+                showToast(`🎉 Уровень ${newLevel}! Множитель ×${newLevel}`);
+            }
+        }
+
+        // ====== НАВИГАЦИЯ ======
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+
+                const panel = item.dataset.panel;
+                if (panel === 'main') {
+                    closeAllPanels();
+                } else if (panel === 'tasks') {
+                    openPanel('tasksPanel');
+                } else if (panel === 'boosts') {
+                    openPanel('boostsPanel');
+                } else if (panel === 'friends') {
+                    openPanel('friendsPanel');
+                }
+            });
+        });
+
+        function openPanel(id) {
+            closeAllPanels();
+            document.getElementById(id).classList.add('active');
+        }
+
+        function closePanel(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function closeAllPanels() {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        }
+
+        // ====== ТАБЫ ======
+        function showTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (tabName === 'daily') {
+                document.getElementById('dailyTasks').style.display = 'block';
+                document.getElementById('oneTimeTasks').style.display = 'none';
+            } else if (tabName === 'one-time') {
+                document.getElementById('dailyTasks').style.display = 'none';
+                document.getElementById('oneTimeTasks').style.display = 'block';
+            } else if (tabName === 'multiplier') {
+                document.getElementById('multiplierBoosts').style.display = 'block';
+                document.getElementById('energyBoosts').style.display = 'none';
+            } else if (tabName === 'energy') {
+                document.getElementById('multiplierBoosts').style.display = 'none';
+                document.getElementById('energyBoosts').style.display = 'block';
+            }
+        }
+
+        // ====== ЗАДАНИЯ ======
+        function renderTasks() {
+            const dailyTasks = document.getElementById('dailyTasks');
+            const oneTimeTasks = document.getElementById('oneTimeTasks');
+
+            dailyTasks.innerHTML = '';
+            oneTimeTasks.innerHTML = '';
+
+            dailyTasksData.forEach(task => {
+                const isCompleted = gameState.completedDailyTasks.includes(task.id);
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.innerHTML = `
+                    <div class="item-info">
+                        <div class="item-icon">${task.icon}</div>
+                        <div>
+                            <div class="item-name">${task.name}</div>
+                            <div class="item-reward">+${task.reward} 🪙</div>
+                        </div>
+                    </div>
+                    ${isCompleted 
+                        ? '<button class="claim-btn" disabled>✓ Выполнено</button>'
+                        : `<button class="claim-btn" onclick="completeTask('daily', ${task.id})">Выполнить</button>`}
+                `;
+                dailyTasks.appendChild(card);
+            });
+
+            oneTimeTasksData.forEach(task => {
+                const isCompleted = gameState.completedOneTimeTasks.includes(task.id);
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.innerHTML = `
+                    <div class="item-info">
+                        <div class="item-icon">${task.icon}</div>
+                        <div>
+                            <div class="item-name">${task.name}</div>
+                            <div class="item-reward">+${task.reward} 🪙</div>
+                        </div>
+                    </div>
+                    ${isCompleted 
+                        ? '<button class="claim-btn" disabled>✓ Выполнено</button>'
+                        : `<button class="claim-btn" onclick="completeTask('oneTime', ${task.id})">Выполнить</button>`}
+                `;
+                oneTimeTasks.appendChild(card);
+            });
+        }
+
+        function completeTask(type, id) {
+            if (type === 'daily') {
+                const task = dailyTasksData.find(t => t.id === id);
+                if (task && !gameState.completedDailyTasks.includes(id)) {
+                    gameState.balance += task.reward;
+                    gameState.completedDailyTasks.push(id);
+                    showToast(`✅ +${task.reward} 🪙`);
+                }
+            } else {
+                const task = oneTimeTasksData.find(t => t.id === id);
+                if (task && !gameState.completedOneTimeTasks.includes(id)) {
+                    gameState.balance += task.reward;
+                    gameState.completedOneTimeTasks.push(id);
+                    showToast(`✅ +${task.reward} 🪙`);
+                }
+            }
+            updateUI();
+            renderTasks();
+            saveGame();
+        }
+
+        // ====== БУСТЫ ======
+        const multiplierBoostsData = [
+            { id: 1, name: "Множитель ×2", cost: 500, icon: "🚀" },
+            { id: 2, name: "Множитель ×3", cost: 1000, icon: "💎" },
+            { id: 3, name: "Множитель ×5", cost: 2000, icon: "🔥" }
+        ];
+
+        const energyBoostsData = [
+            { id: 1, name: "+100 Энергии", cost: 300, icon: "⚡" },
+            { id: 2, name: "+250 Энергии", cost: 500, icon: "⚡" },
+            { id: 3, name: "+500 Энергии", cost: 1000, icon: "⚡" }
+        ];
+
+        function renderBoosts() {
+            const multiplierBoosts = document.getElementById('multiplierBoosts');
+            const energyBoosts = document.getElementById('energyBoosts');
+
+            multiplierBoosts.innerHTML = '';
+            energyBoosts.innerHTML = '';
+
+            multiplierBoostsData.forEach(boost => {
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.innerHTML = `
+                    <div class="item-info">
+                        <div class="item-icon">${boost.icon}</div>
+                        <div>
+                            <div class="item-name">${boost.name}</div>
+                            <div class="item-description">Цена: ${boost.cost} 🪙</div>
+                        </div>
+                    </div>
+                    <button class="claim-btn" onclick="buyMultiplierBoost(${boost.id})">Купить</button>
+                `;
+                multiplierBoosts.appendChild(card);
+            });
+
+            energyBoostsData.forEach(boost => {
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.innerHTML = `
+                    <div class="item-info">
+                        <div class="item-icon">${boost.icon}</div>
+                        <div>
+                            <div class="item-name">${boost.name}</div>
+                            <div class="item-description">Цена: ${boost.cost} 🪙</div>
+                        </div>
+                    </div>
+                    <button class="claim-btn" onclick="buyEnergyBoost(${boost.id})">Купить</button>
+                `;
+                energyBoosts.appendChild(card);
+            });
+        }
+
+        function buyMultiplierBoost(id) {
+            const boost = multiplierBoostsData.find(b => b.id === id);
+            if (boost && gameState.balance >= boost.cost) {
+                gameState.balance -= boost.cost;
+                gameState.multiplier += 1;
+                showToast(`🚀 Буст куплен! Множитель ×${gameState.multiplier}`);
+                updateUI();
+                renderBoosts();
+                saveGame();
+            } else {
+                showToast('❌ Недостаточно монет!');
+            }
+        }
+
+        function buyEnergyBoost(id) {
+            const boost = energyBoostsData.find(b => b.id === id);
+            if (boost && gameState.balance >= boost.cost) {
+                gameState.balance -= boost.cost;
+                gameState.maxEnergy += 100;
+                gameState.energy = gameState.maxEnergy;
+                showToast(`⚡ Энергия увеличена до ${gameState.maxEnergy}`);
+                updateUI();
+                renderBoosts();
+                saveGame();
+            } else {
+                showToast('❌ Недостаточно монет!');
+            }
+        }
+
+        // ====== ДРУЗЬЯ ======
+        function renderFriends() {
+            const friendsList = document.getElementById('friendsList');
+            const friendCount = document.getElementById('friendCount');
+            const friendEarnings = document.getElementById('friendEarnings');
+
+            friendsList.innerHTML = '';
+
+            if (gameState.friends.length === 0) {
+                friendsList.innerHTML = '<p style="text-align: center; opacity: 0.7;">Пока нет друзей</p>';
+            } else {
+                gameState.friends.forEach(friend => {
+                    const card = document.createElement('div');
+                    card.className = 'friend-card';
+                    card.innerHTML = `
+                        <div class="friend-info">
+                            <div class="friend-avatar">👤</div>
+                            <div>
+                                <div class="friend-name">${friend.name}</div>
+                                <div class="friend-reward">${friend.earnings} 🪙</div>
+                            </div>
+                        </div>
+                        <span>✅</span>
+                    `;
+                    friendsList.appendChild(card);
+                });
+            }
+
+            friendCount.textContent = gameState.friends.length;
+            friendEarnings.textContent = gameState.friends.reduce((sum, f) => sum + f.earnings, 0);
+        }
+
+        function copyReferralLink() {
+            const link = document.getElementById('referralLink');
+            link.select();
+            document.execCommand('copy');
+            showToast('📋 Ссылка скопирована!');
+        }
+
+        // ====== ТОСТ ======
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        // ====== ИНИЦИАЛИЗАЦИЯ ======
+        function init() {
+            loadGame();
+            updateUI();
+            renderTasks();
+            renderBoosts();
+            renderFriends();
+
+            // Установка реферальной ссылки
+            const refLink = document.getElementById('referralLink');
+            refLink.value = `https://t.me/geek_coin_bot?start=${Math.random().toString(36).slice(2)}`;
+        }
+
+        // Запуск
+        init();
+    </script>
+</body>
+</html>
