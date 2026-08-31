@@ -1,339 +1,380 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Кликер Игра 🎮</title>
-    <style>
-        /* ===== СТИЛИ ===== */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: Arial, sans-serif; 
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            user-select: none;
-        }
-        .game-container {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 30px;
-            max-width: 500px;
-            width: 100%;
-            text-align: center;
-            border: 2px solid rgba(255,255,255,0.2);
-        }
-        .coin-counter { font-size: 48px; color: #FFD700; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
-        .click-btn {
-            width: 150px; height: 150px; border-radius: 50%;
-            border: 5px solid #FFD700;
-            background: radial-gradient(circle, #ffeb3b, #ffc107);
-            font-size: 24px; font-weight: bold; cursor: pointer;
-            transition: transform 0.1s; margin: 20px auto;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-        }
-        .click-btn:hover { transform: scale(1.05); }
-        .click-btn:active { transform: scale(0.95); }
-        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0; }
-        .stat-box { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); }
-        .stat-box h4 { color: #aaa; font-size: 12px; }
-        .stat-box p { color: white; font-size: 18px; margin-top: 5px; }
-        .upgrades { display: flex; flex-direction: column; gap: 10px; }
-        .upgrade-btn {
-            background: linear-gradient(45deg, #4CAF50, #45a049);
-            color: white; border: none; padding: 12px 20px;
-            border-radius: 8px; cursor: pointer; font-size: 14px;
-            transition: all 0.3s;
-        }
-        .upgrade-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        .upgrade-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn-group { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
-        .action-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; cursor: pointer; font-size: 12px; transition: all 0.3s; color: white; }
-        .action-btn:hover { transform: translateY(-2px); }
-        .btn-save { background: #2196F3; }
-        .btn-daily { background: #FF9800; }
-        .btn-reset { background: #f44336; }
-        .btn-export { background: #9C27B0; }
-        .btn-import { background: #3F51B5; }
-        .save-indicator { position: fixed; top: 20px; right: 20px; background: rgba(76,175,80,0.9); color: white; padding: 10px 20px; border-radius: 5px; opacity: 0; transition: opacity 0.3s; z-index: 1000; }
-        .save-indicator.show { opacity: 1; }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 999; }
-        .modal-content { background: linear-gradient(135deg, #667eea, #764ba2); padding: 30px; border-radius: 20px; text-align: center; color: white; max-width: 400px; }
-        .modal-icon { font-size: 48px; margin-bottom: 15px; }
-        .modal-btn { background: #FFD700; color: #333; border: none; padding: 12px 30px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; }
-        .modal-btn:hover { background: #ffc107; }
-        .offline-coins { color: #FFD700; font-size: 24px; margin: 10px 0; }
-        .coins-highlight { color: #FFD700; font-size: 32px; font-weight: bold; }
-        #import-file { display: none; }
-        .footer-btn { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 11px; }
-        .footer-btn:hover { background: rgba(255,255,255,0.2); }
-        .stats-extra { margin-top: 15px; display: flex; justify-content: space-around; flex-wrap: wrap; }
-        .stats-extra span { color: rgba(255,255,255,0.7); font-size: 12px; margin: 5px; }
-        .stats-extra strong { color: #FFD700; }
-        @media (max-width: 600px) { .game-container { padding: 20px; } .click-btn { width: 120px; height: 120px; font-size: 20px; } .coin-counter { font-size: 36px; } }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💰 Койн Кликер</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+body { 
+    background: #000; 
+    overflow: hidden; 
+    font-family: Arial, sans-serif; 
+    height: 100vh; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+}
+canvas#stars { position: fixed; top: 0; left: 0; z-index: 0; }
+.container { 
+    position: relative; z-index: 1; 
+    text-align: center; width: 100%; max-width: 400px; 
+    padding: 20px; 
+}
+.star { position: absolute; color: #fff; opacity: 0.8; z-index: 0; }
+
+.coin {
+    width: 180px; height: 180px; border-radius: 50%;
+    cursor: pointer; transition: transform 0.1s;
+    box-shadow: 0 0 30px #ffd700, 0 0 60px #ffd700;
+    margin: 20px auto; display: block;
+    background: url('https://i.postimg.cc/h4MwsV6n/geekbot-ru-1788098202047.png') center/cover;
+}
+.coin:active { transform: scale(0.9); }
+.stats { color: #fff; margin: 10px; font-size: 24px; }
+.stats small { display: block; font-size: 14px; color: #aaa; }
+.energy-bar { 
+    background: #222; border-radius: 10px; padding: 3px; margin: 15px;
+}
+.energy-fill { 
+    background: linear-gradient(90deg, #00f, #0ff); height: 20px; 
+    border-radius: 8px; width: 100%; transition: width 0.3s;
+}
+.energy-text { color: #fff; margin: 10px; font-size: 14px; }
+.btn { 
+    background: linear-gradient(45deg, #0088cc, #00bfff); color: #fff; 
+    border: none; padding: 12px 20px; border-radius: 10px; 
+    margin: 5px; cursor: pointer; font-size: 14px; width: 90%;
+}
+.btn:hover { opacity: 0.8; }
+.btn.telegram { background: linear-gradient(45deg, #229ED9, #50a7e7); }
+.btn.referral { background: linear-gradient(45deg, #f093fb, #f5576c); }
+</style>
 </head>
 <body>
-    <!-- Игра -->
-    <div class="game-container">
-        <h1 style="color: white; margin-bottom: 10px;">💰 Кликер</h1>
-        <p id="coin-counter" class="coin-counter">0 🪙</p>
-        <button class="click-btn" onclick="handleClick()">КЛИК!</button>
-        <div class="stats">
-            <div class="stat-box"><h4>УРОВЕНЬ КЛИКА</h4><p id="click-power">1</p></div>
-            <div class="stat-box"><h4>ПАССИВНЫЙ ДОХОД</h4><p id="passive-income">0/сек</p></div>
-            <div class="stat-box"><h4>ПРОГРЕСС</h4><p id="total-clicks">0 кликов</p></div>
-        </div>
-        <div class="upgrades">
-            <button class="upgrade-btn" id="upgrade-click" onclick="buyUpgrade('clickPower')">⚡ Улучшить клик (50 🪙)</button>
-            <button class="upgrade-btn" id="upgrade-passive" onclick="buyUpgrade('passiveIncome')">💰 Пассивный доход (100 🪙)</button>
-        </div>
-        <div class="btn-group">
-            <button class="action-btn btn-save" onclick="manualSave()">💾 Сохранить</button>
-            <button class="action-btn btn-daily" onclick="claimDaily()">🎁 Бонус</button>
-            <button class="action-btn btn-reset" onclick="resetGame()">🔄 Сброс</button>
-            <button class="action-btn btn-export" onclick="exportSave()">📤 Экспорт</button>
-            <button class="action-btn btn-import" onclick="document.getElementById('import-file').click()">📥 Импорт</button>
-        </div>
-        <div class="stats-extra">
-            <span>Серия: <strong id="streak-days">0 дней</strong></span>
-            <span>Доход за сессию: <strong id="session-coins">0</strong></span>
-        </div>
+
+<canvas id="stars"></canvas>
+
+<div class="container">
+    <h2 style="color:#fff; margin-bottom:5px;">💰 Койн Кликер</h2>
+
+    <!-- Статистика -->
+    <div class="stats">
+        <span id="coinCount">0.000</span>
+        <small>KOIN</small>
     </div>
 
-    <div class="save-indicator" id="save-indicator">💾 Сохранено</div>
+    <!-- Монета -->
+    <div class="coin" id="coin"></div>
 
-    <!-- Модальное окно офлайн-дохода -->
-    <div class="modal-overlay" id="offline-modal">
-        <div class="modal-content">
-            <div class="modal-icon">💰</div>
-            <h2>Пока вас не было...</h2>
-            <p>Ваш бизнес принёс доход:</p>
-            <p class="offline-coins" id="offline-coins">+0 🪙</p>
-            <hr style="border-color: rgba(255,255,255,0.3); margin: 10px 0;">
-            <p>Ваш баланс:</p>
-            <p class="coins-highlight" id="offline-total">0 🪙</p>
-            <button class="modal-btn" onclick="closeOfflineModal()">Отлично!</button>
-        </div>
+    <!-- Энергия -->
+    <div class="energy-bar">
+        <div class="energy-fill" id="energyFill"></div>
     </div>
+    <div class="energy-text" id="energyText">⚡ 10 / 10</div>
 
-    <!-- Модальное окно ежедневного бонуса -->
-    <div class="modal-overlay" id="daily-modal">
-        <div class="modal-content">
-            <div class="modal-icon">🎁</div>
-            <h2>Ежедневный бонус</h2>
-            <p id="daily-day">День 1</p>
-            <p class="coins-highlight" id="daily-reward">+100 🪙</p>
-            <p id="daily-message" style="color: rgba(255,255,255,0.8);"></p>
-            <button class="modal-btn" onclick="closeDailyModal()">Забрать!</button>
-        </div>
-    </div>
+    <!-- Реферальная ссылка -->
+    <button class="btn referral" onclick="copyReferral()">🎁 Реферальная ссылка</button>
+    <small style="color:#aaa; display:block; margin:5px;">Пригласите друзей: <span id="refCount">0</span></small>
 
-    <input type="file" id="import-file" accept=".json" onchange="importSave(this)">
+    <!-- Привязка кошелька -->
+    <button class="btn telegram" onclick="connectWallet()">💎 Привязать TON-кошелёк</button>
 
-    <script>
-        // ===== ВСЯ ЛОГИКА ИГРЫ =====
-        const SAVE_KEY = 'clicker_game_save_v1';
-        let gameState = null;
-        let sessionCoins = 0;
+    <!-- Регистрация -->
+    <button class="btn" onclick="registerAccount()">👤 Регистрация / Привязка Telegram</button>
 
-        // Новая игра
-        function createNewGame() {
-            return {
-                coins: 0, totalClicks: 0, totalCoins: 0,
-                clickLevel: 0, passiveLevel: 0,
-                lastSeen: Date.now(),
-                dailyClaimed: false, lastDaily: null, streakDays: 0
-            };
+    <!-- Инфо -->
+    <small style="color:#666; display:block; margin-top:15px;">
+        ⚡ Энергия: +1 / 5 сек | 🪙 1 тап = 0.001 KOIN
+    </small>
+</div>
+
+<script>
+// ====== ЧАСТЬ 3: ЖИВЫЕ ОБОИ - ПАДАЮЩИЕ ЗВЁЗДЫ ======
+const canvas = document.getElementById('stars');
+const ctx = canvas.getContext('2d');
+let stars = [];
+let animFrame;
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+function createStar() {
+    return {
+        x: Math.random() * canvas.width,
+        y: -10,
+        speed: Math.random() * 2 + 1,
+        size: Math.random() * 2 + 1,
+        opacity: Math.random() * 0.8 + 0.2
+    };
+}
+
+function initStars(count) {
+    stars = [];
+    for (let i = 0; i < count; i++) {
+        const s = createStar();
+        s.y = Math.random() * canvas.height;
+        stars.push(s);
+    }
+}
+
+function drawStars() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    stars.forEach(s => {
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${s.opacity})`;
+        ctx.fill();
+        s.y += s.speed;
+        if (s.y > canvas.height + 10) { 
+            Object.assign(s, createStar()); 
         }
+    });
+    animFrame = requestAnimationFrame(drawStars);
+}
+initStars(150);
+drawStars();
 
-        // Сохранение
-        function saveGame() {
-            if (!gameState) return;
-            gameState.lastSeen = Date.now();
-            localStorage.setItem(SAVE_KEY, JSON.stringify(gameState));
-            showSaveIndicator();
+// ====== ЧАСТЬ 4: ОСНОВНЫЕ ПЕРЕМЕННЫЕ ИГРЫ ======
+const DEFAULT_STATE = {
+    coins: 0,
+    energy: 10,
+    maxEnergy: 10,
+    energyRegenTime: 5000,
+    refCount: 0,
+    telegramId: null,
+    username: null,
+    registered: false,
+    wallet: null
+};
+
+let state = { ...DEFAULT_STATE };
+let energyRegenTimer = null;
+const TAP_VALUE = 0.001;
+
+// Элементы DOM
+const coin = document.getElementById('coin');
+const coinCount = document.getElementById('coinCount');
+const energyText = document.getElementById('energyText');
+const energyFill = document.getElementById('energyFill');
+const refCountEl = document.getElementById('refCount');
+
+// ====== ЧАСТЬ 5: СОХРАНЕНИЕ И ЗАГРУЗКА ======
+function saveState() {
+    localStorage.setItem('coinClickerState', JSON.stringify(state));
+}
+
+function loadState() {
+    const saved = localStorage.getItem('coinClickerState');
+    if (saved) {
+        try {
+            state = { ...DEFAULT_STATE, ...JSON.parse(saved) };
+        } catch(e) { console.error('Ошибка загрузки'); }
+    }
+}
+
+function initTelegram() {
+    if (window.Telegram?.WebApp) {
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        const user = tg.initDataUnsafe?.user;
+        if (user) {
+            state.telegramId = user.id;
+            state.username = user.username || user.first_name;
+            state.registered = true;
+            saveState();
+            syncFromServer();
         }
+    }
+}
 
-        // Загрузка
-        function loadGame() {
-            const saved = localStorage.getItem(SAVE_KEY);
-            if (saved) {
-                try { gameState = JSON.parse(saved); return; } 
-                catch(e) { console.error('Ошибка загрузки', e); }
-            }
-            gameState = createNewGame();
+// ====== ЧАСТЬ 6: РЕФЕРАЛЬНАЯ СИСТЕМА ======
+function getReferralLink() {
+    const userId = state.telegramId || generateLocalId();
+    const baseUrl = 'https://t.me/RB_coin_official_bot?start='; // ← Бот: @RB_coin_official_bot
+    return baseUrl + userId;
+}
+
+function generateLocalId() {
+    if (!localStorage.getItem('localUserId')) {
+        localStorage.setItem('localUserId', Math.random().toString(36).slice(2));
+    }
+    return localStorage.getItem('localUserId');
+}
+
+function checkReferral() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const startParam = urlParams.get('start') || 
+                      window.Telegram?.WebApp?.initDataUnsafe?.start_param;
+
+    if (startParam) {
+        const referrerId = startParam;
+        localStorage.setItem('referredBy', referrerId);
+        state.refCount++;
+        saveState();
+        console.log('Вы пришли по рефссылке! Реферер:', referrerId);
+        showToast('🎁 Вы пришли по реферальной ссылке!');
+    }
+}
+
+// ====== ЧАСТЬ 7: ЭНЕРГИЯ И КЛИКИ ======
+function updateEnergyDisplay() {
+    energyText.textContent = `⚡ ${Math.floor(state.energy)} / ${state.maxEnergy}`;
+    energyFill.style.width = (state.energy / state.maxEnergy * 100) + '%';
+
+    if (state.energy <= 0) {
+        energyFill.style.background = '#f00';
+    } else {
+        energyFill.style.background = 'linear-gradient(90deg, #00f, #0ff)';
+    }
+}
+
+function startEnergyRegen() {
+    if (energyRegenTimer) clearInterval(energyRegenTimer);
+    energyRegenTimer = setInterval(() => {
+        if (state.energy < state.maxEnergy) {
+            state.energy += 1;
+            saveState();
+            updateEnergyDisplay();
         }
+    }, state.energyRegenTime);
+}
 
-        // Обновление UI
-        function updateUI() {
-            document.getElementById('coin-counter').textContent = formatNumber(gameState.coins) + ' 🪙';
-            document.getElementById('click-power').textContent = getClickPower();
-            document.getElementById('passive-income').textContent = getPassiveIncome() + '/сек';
-            document.getElementById('total-clicks').textContent = formatNumber(gameState.totalClicks) + ' кликов';
-            document.getElementById('session-coins').textContent = formatNumber(sessionCoins);
-            document.getElementById('streak-days').textContent = gameState.streakDays + ' дней';
+function tapCoin() {
+    if (state.energy < 1) {
+        showToast('Нет энергии! Подождите ⚡');
+        return;
+    }
 
-            document.getElementById('upgrade-click').textContent = `⚡ Улучшить клик (${formatNumber(getClickUpgradeCost())} 🪙)`;
-            document.getElementById('upgrade-passive').textContent = `💰 Пассивный доход (${formatNumber(getPassiveUpgradeCost())} 🪙)`;
+    state.energy -= 1;
+    state.coins += TAP_VALUE;
+    saveState();
 
-            document.getElementById('upgrade-click').disabled = gameState.coins < getClickUpgradeCost();
-            document.getElementById('upgrade-passive').disabled = gameState.coins < getPassiveUpgradeCost();
+    coinCount.textContent = state.coins.toFixed(3);
+    updateEnergyDisplay();
+
+    coin.style.transform = 'scale(0.9)';
+    setTimeout(() => { coin.style.transform = 'scale(1)'; }, 100);
+
+    showFloatingNumber('+' + TAP_VALUE);
+}
+
+// ====== ЧАСТЬ 8: ДОПОЛНИТЕЛЬНЫЕ ФУНКЦИИ ======
+function showFloatingNumber(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    div.style.cssText = `
+        position: absolute; left: 50%; top: 40%;
+        transform: translateX(-50%); color: #ffd700;
+        font-size: 24px; font-weight: bold; pointer-events: none;
+        z-index: 10; text-shadow: 0 0 10px #ffd700;
+        animation: floatUp 1s forwards;
+    `;
+    document.body.appendChild(div);
+    setTimeout(() => div.remove(), 1000);
+}
+
+function showToast(msg) {
+    const toast = document.createElement('div');
+    toast.textContent = msg;
+    toast.style.cssText = `
+        position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+        background: rgba(0,0,0,0.8); color: #fff; padding: 10px 20px;
+        border-radius: 10px; z-index: 100; border: 1px solid #ffd700;
+        animation: slideDown 0.3s forwards;
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2000);
+}
+
+const style = document.createElement('style');
+style.textContent = `
+@keyframes floatUp { 
+    from { opacity: 1; transform: translate(-50%, 0); }
+    to { opacity: 0; transform: translate(-50%, -80px); }
+}
+@keyframes slideDown {
+    from { transform: translate(-50%, -100%); }
+    to { transform: translate(-50%, 0); }
+}`;
+document.head.appendChild(style);
+
+// ====== ЧАСТЬ 9: КОШЕЛЁК И РЕГИСТРАЦИЯ ======
+function connectWallet() {
+    if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.sendData(JSON.stringify({ action: 'connect_wallet' }));
+        showToast('Запрос отправлен!');
+    } else {
+        const wallet = prompt('Введите адрес вашего TON-кошелька:');
+        if (wallet) {
+            state.wallet = wallet;
+            saveState();
+            showToast('✅ Кошелёк привязан: ' + wallet.slice(0, 6) + '...');
         }
+    }
+}
 
-        // Клик
-        function handleClick() {
-            const power = getClickPower();
-            gameState.coins += power;
-            gameState.totalClicks++;
-            gameState.totalCoins += power;
-            sessionCoins += power;
-            updateUI();
-            if (gameState.totalClicks % 50 === 0) saveGame();
+function registerAccount() {
+    if (state.registered) {
+        showToast('✅ Вы уже авторизованы!');
+        return;
+    }
+
+    if (window.Telegram?.WebApp) {
+        const tg = window.Telegram.WebApp;
+        const user = tg.initDataUnsafe?.user;
+        if (user) {
+            state.telegramId = user.id;
+            state.username = user.username || user.first_name;
+            state.registered = true;
+            saveState();
+            showToast('✅ Аккаунт привязан к Telegram!');
         }
-
-        // Мощность
-        function getClickPower() { return 1 + gameState.clickLevel * 2; }
-        function getPassiveIncome() { return gameState.passiveLevel * 5; }
-        function getClickUpgradeCost() { return 50 * Math.pow(2, gameState.clickLevel); }
-        function getPassiveUpgradeCost() { return 100 * Math.pow(2, gameState.passiveLevel); }
-
-        // Покупка
-        function buyUpgrade(type) {
-            const cost = type === 'clickPower' ? getClickUpgradeCost() : getPassiveUpgradeCost();
-            if (gameState.coins < cost) return;
-            gameState.coins -= cost;
-            if (type === 'clickPower') gameState.clickLevel++;
-            else gameState.passiveLevel++;
-            updateUI(); saveGame();
+    } else {
+        const username = prompt('Введите ваш Telegram username (без @):');
+        if (username) {
+            state.username = username;
+            state.registered = true;
+            saveState();
+            showToast('✅ Аккаунт создан!');
         }
+    }
+}
 
-        // Пассивный доход
-        setInterval(() => {
-            if (!gameState) return;
-            const income = getPassiveIncome();
-            if (income > 0) {
-                gameState.coins += income;
-                sessionCoins += income;
-                updateUI();
-            }
-        }, 1000);
+function syncFromServer() {
+    loadState();
+    updateAllUI();
+}
 
-        // Офлайн доход
-        function checkOfflineIncome() {
-            if (!gameState) return;
-            const now = Date.now();
-            const offlineMs = Math.min(now - gameState.lastSeen, 8 * 60 * 60 * 1000);
-            const offlineHours = offlineMs / 3600000;
-            const income = Math.floor(getPassiveIncome() * offlineHours * 3600 * 0.5);
+// ====== ЧАСТЬ 10: ОБРАБОТЧИКИ И ЗАПУСК ======
+function copyReferral() {
+    const link = getReferralLink();
+    navigator.clipboard.writeText(link).then(() => {
+        showToast('🔗 Ссылка скопирована!');
+    });
+}
 
-            if (income > 0) {
-                gameState.coins += income;
-                gameState.totalCoins += income;
-                sessionCoins += income;
-                document.getElementById('offline-coins').textContent = `+${formatNumber(income)} 🪙`;
-                document.getElementById('offline-total').textContent = `${formatNumber(gameState.coins)} 🪙`;
-                document.getElementById('offline-modal').style.display = 'flex';
-            }
-        }
+function updateAllUI() {
+    coinCount.textContent = state.coins.toFixed(3);
+    updateEnergyDisplay();
+    refCountEl.textContent = state.refCount;
+}
 
-        function closeOfflineModal() {
-            document.getElementById('offline-modal').style.display = 'none';
-            saveGame();
-        }
+coin.addEventListener('click', tapCoin);
 
-        // Ежедневный бонус
-        function claimDaily() {
-            const today = new Date().toDateString();
-            if (gameState.dailyClaimed && gameState.lastDaily === today) {
-                alert('Бонус уже получен сегодня!');
-                return;
-            }
+loadState();
+initTelegram();
+checkReferral();
+updateAllUI();
+startEnergyRegen();
 
-            const yesterday = new Date(Date.now() - 86400000).toDateString();
-            if (gameState.lastDaily === yesterday) gameState.streakDays++;
-            else gameState.streakDays = 1;
-
-            const rewards = [100, 250, 500, 1000, 2500, 5000, 10000];
-            const dayIndex = Math.min(gameState.streakDays - 1, rewards.length - 1);
-            const reward = rewards[dayIndex];
-
-            gameState.coins += reward;
-            gameState.totalCoins += reward;
-            gameState.dailyClaimed = true;
-            gameState.lastDaily = today;
-
-            document.getElementById('daily-day').textContent = `День ${gameState.streakDays}`;
-            document.getElementById('daily-reward').textContent = `+${formatNumber(reward)} 🪙`;
-            document.getElementById('daily-message').textContent = 'Бонус за вход в игру!';
-            document.getElementById('daily-modal').style.display = 'flex';
-
-            updateUI(); saveGame();
-        }
-
-        function closeDailyModal() {
-            document.getElementById('daily-modal').style.display = 'none';
-        }
-
-        function manualSave() { saveGame(); showSaveIndicator('💾 Сохранено'); }
-
-        function resetGame() {
-            if (confirm('Удалить сохранение и начать заново?')) {
-                localStorage.removeItem(SAVE_KEY);
-                gameState = createNewGame();
-                sessionCoins = 0;
-                updateUI(); saveGame();
-            }
-        }
-
-        function exportSave() {
-            const blob = new Blob([JSON.stringify(gameState, null, 2)], {type: 'application/json'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = 'clicker_save.json'; a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        function importSave(input) {
-            const file = input.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    if (data && typeof data.coins === 'number') {
-                        gameState = data;
-                        updateUI(); saveGame();
-                        alert('Импорт успешен!');
-                    } else alert('Ошибка: неверный файл');
-                } catch(err) { alert('Ошибка импорта'); }
-            };
-            reader.readAsText(file);
-            input.value = '';
-        }
-
-        // Вспомогательные функции
-        function formatNumber(num) {
-            if (num >= 1e12) return (num / 1e12).toFixed(2) + 'T';
-            if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
-            if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
-            if (num >= 1e3) return (num / 1e3).toFixed(1) + 'K';
-            return Math.floor(num);
-        }
-
-        function showSaveIndicator() {
-            const el = document.getElementById('save-indicator');
-            el.classList.add('show');
-            setTimeout(() => el.classList.remove('show'), 1500);
-        }
-
-        // ===== Инициализация =====
-        loadGame();
-        updateUI();
-        checkOfflineIncome();
-    </script>
+window.addEventListener('beforeunload', () => {
+    if (energyRegenTimer) clearInterval(energyRegenTimer);
+});
+</script>
 </body>
 </html>
