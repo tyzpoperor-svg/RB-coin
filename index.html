@@ -1,321 +1,912 @@
-<script>
-// ====== ЧАСТЬ 1: ОСНОВНЫЕ НАСТРОЙКИ ======
-const TAP_VALUE = 0.001; // Сколько даёт один клик
-const MAX_ENERGY = 10;   // Максимум энергии
-const ENERGY_REGEN_TIME = 5000; // 5 секунд
+<!-- Telegram WebApp SDK -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-let state = {
-    coins: 0,
-    energy: MAX_ENERGY,
-    refCount: 0,
-    telegramId: null,
-    username: null,
-    registered: false,
-    wallet: null,
-    lastUpdate: Date.now()
-};
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+    }
 
-// ====== ЧАСТЬ 2: ИНИЦИАЛИЗАЦИЯ TELEGRAM ======
-function initTelegram() {
-    if (window.Telegram?.WebApp) {
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+        color: #ffffff;
+        min-height: 100vh;
+        overflow-x: hidden;
+        user-select: none;
+    }
 
-        const user = tg.initDataUnsafe?.user;
-        if (user) {
-            state.telegramId = user.id;
-            state.username = user.username || user.first_name;
-            state.registered = true;
-            console.log('Пользователь:', state.username, 'ID:', state.telegramId);
+    #app {
+        max-width: 480px;
+        margin: 0 auto;
+        padding: 20px;
+        position: relative;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Header */
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        margin-bottom: 20px;
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #ffd700, #ff6b6b);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        font-weight: bold;
+        color: #000;
+    }
+
+    .username {
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .user-id {
+        font-size: 12px;
+        color: #888;
+    }
+
+    .settings-btn {
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 20px;
+        cursor: pointer;
+        padding: 8px;
+    }
+
+    /* Balance Card */
+    .balance-card {
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 107, 107, 0.1));
+        border: 1px solid rgba(255, 215, 0, 0.3);
+        border-radius: 20px;
+        padding: 20px;
+        margin-bottom: 20px;
+        backdrop-filter: blur(10px);
+    }
+
+    .balance-label {
+        font-size: 14px;
+        color: #aaa;
+        margin-bottom: 5px;
+    }
+
+    .balance-value {
+        font-size: 36px;
+        font-weight: 700;
+        background: linear-gradient(90deg, #ffd700, #ff6b6b);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Coin */
+    .coin-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex: 1;
+        margin: 20px 0;
+    }
+
+    #coin {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 30% 30%, #ffd700, #ff6b00);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 100px;
+        cursor: pointer;
+        box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+        transition: transform 0.1s;
+        position: relative;
+        user-select: none;
+    }
+
+    #coin:active {
+        transform: scale(0.95);
+    }
+
+    #coin::after {
+        content: '₿';
+        position: absolute;
+        font-size: 60px;
+        font-weight: bold;
+        color: #fff;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+
+    /* Energy Bar */
+    .energy-container {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 15px;
+        margin-bottom: 20px;
+        backdrop-filter: blur(10px);
+    }
+
+    .energy-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        font-size: 14px;
+    }
+
+    .energy-bar {
+        height: 10px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 5px;
+        overflow: hidden;
+    }
+
+    #energyFill {
+        height: 100%;
+        background: linear-gradient(90deg, #00ff88, #00ffff);
+        border-radius: 5px;
+        transition: width 0.3s ease;
+    }
+
+    /* Actions */
+    .actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .action-btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        color: #fff;
+        padding: 15px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .action-btn:active {
+        transform: scale(0.95);
+        background: rgba(255, 215, 0, 0.2);
+    }
+
+    .action-btn.primary {
+        background: linear-gradient(135deg, #ffd700, #ff6b00);
+        border: none;
+        color: #000;
+        font-weight: 600;
+    }
+
+    /* Referral */
+    .referral-section {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    .referral-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: #ffd700;
+    }
+
+    .referral-stats {
+        display: flex;
+        justify-content: space-around;
+        margin-bottom: 10px;
+    }
+
+    .stat {
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 24px;
+        font-weight: 700;
+    }
+
+    .stat-label {
+        font-size: 12px;
+        color: #888;
+    }
+
+    /* Footer */
+    .footer {
+        margin-top: auto;
+        padding-top: 20px;
+        text-align: center;
+        color: #666;
+        font-size: 12px;
+    }
+
+    /* Toast */
+    .toast {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-100%);
+        background: rgba(0, 0, 0, 0.9);
+        color: #fff;
+        padding: 12px 20px;
+        border-radius: 10px;
+        z-index: 1000;
+        transition: transform 0.3s ease;
+        border: 1px solid #ffd700;
+        max-width: 90%;
+        text-align: center;
+    }
+
+    .toast.show {
+        transform: translateX(-50%) translateY(0);
+    }
+
+    /* Floating number animation */
+    @keyframes floatUp {
+        from {
+            opacity: 1;
+            transform: translateY(0);
         }
-
-        // Проверяем реферальную ссылку
-        const startParam = tg.initDataUnsafe?.start_param;
-        if (startParam && startParam !== state.telegramId) {
-            // Отправляем на сервер информацию о реферале
-            sendReferralToServer(startParam);
-        }
-
-        // Загружаем данные с сервера
-        loadFromTelegramServer();
-    } else {
-        // Fallback для браузера (тест)
-        console.log('Telegram WebApp не найден, работаем локально');
-        loadLocalState();
-    }
-}
-
-// ====== ЧАСТЬ 3: СИНХРОНИЗАЦИЯ С TELEGRAM CLOUD ======
-async function saveToTelegramServer() {
-    if (!window.Telegram?.WebApp) return;
-
-    try {
-        const data = {
-            coins: state.coins,
-            refCount: state.refCount,
-            wallet: state.wallet,
-            lastUpdate: Date.now()
-        };
-
-        // Сохраняем в Telegram Cloud Storage
-        window.Telegram.WebApp.CloudStorage?.setItem('gameData', JSON.stringify(data));
-
-        // Отправляем через Bot API (если есть сервер)
-        if (window.Telegram.WebApp.initDataUnsafe?.user) {
-            const userId = window.Telegram.WebApp.initDataUnsafe.user.id;
-            await fetch(`https://your-server.com/api/save?user=${userId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            }).catch(err => console.log('Сервер недоступен, использую Cloud Storage'));
-        }
-    } catch (e) {
-        console.log('Ошибка сохранения:', e);
-    }
-}
-
-async function loadFromTelegramServer() {
-    if (!window.Telegram?.WebApp) {
-        loadLocalState();
-        return;
-    }
-
-    try {
-        // Пытаемся загрузить из Telegram Cloud Storage
-        const cloudData = await window.Telegram.WebApp.CloudStorage?.getItem('gameData');
-        if (cloudData) {
-            const parsed = JSON.parse(cloudData);
-            state.coins = parsed.coins || 0;
-            state.refCount = parsed.refCount || 0;
-            state.wallet = parsed.wallet || null;
-        }
-
-        // Пытаемся загрузить с сервера (если есть)
-        const userId = window.Telegram.WebApp.initDataUnsafe?.user?.id;
-        if (userId) {
-            fetch(`https://your-server.com/api/load?user=${userId}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data) {
-                        state.coins = data.coins || 0;
-                        state.refCount = data.refCount || 0;
-                        state.wallet = data.wallet || null;
-                    }
-                    updateUI();
-                })
-                .catch(() => {
-                    updateUI();
-                });
-        } else {
-            updateUI();
-        }
-    } catch (e) {
-        console.log('Ошибка загрузки:', e);
-        loadLocalState();
-        updateUI();
-    }
-}
-
-// ====== ЧАСТЬ 4: РЕФЕРАЛЬНАЯ СИСТЕМА ======
-function getReferralLink() {
-    const userId = state.telegramId || generateLocalId();
-    const baseUrl = 'https://t.me/RB_coin_official_bot?start='; // ← ВАШ БОТ
-    return baseUrl + userId;
-}
-
-function generateLocalId() {
-    if (!localStorage.getItem('localUserId')) {
-        localStorage.setItem('localUserId', 'user_' + Math.random().toString(36).slice(2));
-    }
-    return localStorage.getItem('localUserId');
-}
-
-async function sendReferralToServer(referrerId) {
-    if (!window.Telegram?.WebApp) return;
-
-    const user = window.Telegram.WebApp.initDataUnsafe?.user;
-    if (!user) return;
-
-    try {
-        // Отправляем информацию о реферале
-        await fetch(`https://your-server.com/api/referral`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                referrer_id: referrerId,
-                new_user_id: user.id,
-                username: user.username || user.first_name
-            })
-        });
-
-        // Показываем бонус
-        state.coins += 0.5; // Бонус за реферала
-        saveState();
-        updateUI();
-        showToast('🎁 +0.5 KOIN за переход по реферальной ссылке!');
-    } catch (e) {
-        console.log('Реферальная система не работает без сервера');
-        // Fallback: сохраняем в localStorage
-        localStorage.setItem('referredBy', referrerId);
-        state.refCount++;
-        saveState();
-        updateUI();
-    }
-}
-
-// ====== ЧАСТЬ 5: ЛОКАЛЬНОЕ СОХРАНЕНИЕ (FALLBACK) ======
-function saveState() {
-    localStorage.setItem('coinClickerState', JSON.stringify(state));
-    saveToTelegramServer(); // Также сохраняем в Telegram Cloud
-}
-
-function loadLocalState() {
-    const saved = localStorage.getItem('coinClickerState');
-    if (saved) {
-        try {
-            state = { ...state, ...JSON.parse(saved) };
-        } catch(e) {
-            console.error('Ошибка загрузки');
+        to {
+            opacity: 0;
+            transform: translateY(-50px);
         }
     }
-}
 
-// ====== ЧАСТЬ 6: ИГРОВАЯ ЛОГИКА ======
-function tapCoin() {
-    if (state.energy < 1) {
-        showToast('Нет энергии! Подождите ⚡');
-        return;
-    }
-
-    state.energy -= 1;
-    state.coins += TAP_VALUE;
-
-    // Анимация клика
-    coin.style.transform = 'scale(0.9)';
-    setTimeout(() => { coin.style.transform = 'scale(1)'; }, 100);
-
-    // Плавающий текст
-    showFloatingNumber('+' + TAP_VALUE);
-
-    saveState();
-    updateUI();
-}
-
-function updateEnergy() {
-    if (state.energy < MAX_ENERGY) {
-        state.energy += 1;
-        saveState();
-        updateUI();
-    }
-}
-
-function updateUI() {
-    coinCount.textContent = state.coins.toFixed(3);
-    energyText.textContent = `⚡ ${Math.floor(state.energy)} / ${MAX_ENERGY}`;
-    energyFill.style.width = (state.energy / MAX_ENERGY * 100) + '%';
-
-    if (state.energy <= 0) {
-        energyFill.style.background = '#f00';
-    } else {
-        energyFill.style.background = 'linear-gradient(90deg, #00f, #0ff)';
-    }
-
-    refCountEl.textContent = state.refCount;
-}
-
-// ====== ЧАСТЬ 7: ДОПОЛНИТЕЛЬНЫЕ ФУНКЦИИ ======
-function showFloatingNumber(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    div.style.cssText = `
-        position: absolute; left: 50%; top: 40%;
-        transform: translateX(-50%); color: #ffd700;
-        font-size: 24px; font-weight: bold; pointer-events: none;
-        z-index: 10; text-shadow: 0 0 10px #ffd700;
+    .floating-number {
+        position: absolute;
+        color: #ffd700;
+        font-size: 20px;
+        font-weight: bold;
+        pointer-events: none;
         animation: floatUp 1s forwards;
-    `;
-    document.body.appendChild(div);
-    setTimeout(() => div.remove(), 1000);
-}
-
-function showToast(msg) {
-    const toast = document.createElement('div');
-    toast.textContent = msg;
-    toast.style.cssText = `
-        position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-        background: rgba(0,0,0,0.8); color: #fff; padding: 10px 20px;
-        border-radius: 10px; z-index: 100; border: 1px solid #ffd700;
-        animation: slideDown 0.3s forwards;
-    `;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 2000);
-}
-
-function copyReferral() {
-    const link = getReferralLink();
-    navigator.clipboard.writeText(link).then(() => {
-        showToast('🔗 Ссылка скопирована!');
-    });
-}
-
-function connectWallet() {
-    if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.sendData(JSON.stringify({ action: 'connect_wallet' }));
-        showToast('Запрос отправлен!');
-    } else {
-        const wallet = prompt('Введите адрес вашего TON-кошелька:');
-        if (wallet) {
-            state.wallet = wallet;
-            saveState();
-            updateUI();
-            showToast('✅ Кошелёк привязан: ' + wallet.slice(0, 6) + '...');
-        }
-    }
-}
-
-function registerAccount() {
-    if (state.registered) {
-        showToast('✅ Вы уже авторизованы!');
-        return;
+        text-shadow: 0 2px 10px rgba(255, 215, 0, 0.5);
     }
 
-    if (window.Telegram?.WebApp) {
-        const user = window.Telegram.WebApp.initDataUnsafe?.user;
-        if (user) {
-            state.telegramId = user.id;
-            state.username = user.username || user.first_name;
-            state.registered = true;
-            saveState();
-            updateUI();
-            showToast('✅ Аккаунт привязан к Telegram!');
-        }
-    } else {
-        const username = prompt('Введите ваш Telegram username (без @):');
-        if (username) {
-            state.username = username;
-            state.registered = true;
-            saveState();
-            updateUI();
-            showToast('✅ Аккаунт создан!');
+    /* Modal */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 999;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+    }
+
+    .modal-overlay.show {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .modal {
+        background: #1a1a2e;
+        border-radius: 20px;
+        padding: 20px;
+        width: 90%;
+        max-width: 400px;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .modal-title {
+        font-size: 20px;
+        font-weight: 600;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 24px;
+        cursor: pointer;
+        padding: 5px;
+    }
+
+    /* Wallet */
+    .wallet-input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        font-size: 14px;
+        margin-bottom: 15px;
+    }
+
+    /* Referral link */
+    .referral-link {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 10px;
+        margin-top: 10px;
+    }
+
+    .referral-link input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        color: #ffd700;
+        font-size: 12px;
+        word-break: break-all;
+    }
+
+    .copy-btn {
+        background: #ffd700;
+        color: #000;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 12px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    /* Debug */
+    .debug {
+        position: fixed;
+        bottom: 10px;
+        left: 10px;
+        font-size: 10px;
+        color: #666;
+        background: rgba(0,0,0,0.5);
+        padding: 5px;
+        border-radius: 5px;
+        z-index: 100;
+    }
+</style>
+
+
+
+    
+
+
+        
+        
+
+            
+
+                
+👤
+
+                
+
+                    
+Загрузка…
+
+                    
+ID: -
+
+                
+
+            
+
+            ⚙️
+        
+
+    <!-- Balance -->
+    <div class="balance-card">
+        <div class="balance-label">Баланс</div>
+        <div class="balance-value" id="balance">0.000</div>
+    </div>
+
+    <!-- Coin -->
+    <div class="coin-container">
+        <div id="coin" onclick="tapCoin(event)">
+            <span style="display:none;">🪙</span>
+        </div>
+    </div>
+
+    <!-- Energy -->
+    <div class="energy-container">
+        <div class="energy-header">
+            <span>⚡ Энергия</span>
+            <span id="energyText">10 / 10</span>
+        </div>
+        <div class="energy-bar">
+            <div id="energyFill" style="width: 100%;"></div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+        <button class="action-btn" onclick="showReferral()">👥 Рефералы</button>
+        <button class="action-btn" onclick="showWallet()">💎 Кошелёк</button>
+        <button class="action-btn primary" onclick="showBoosters()">⚡ Бустеры</button>
+        <button class="action-btn" onclick="showTasks()">📋 Задания</button>
+    </div>
+
+    <!-- Referral Info -->
+    <div class="referral-section" id="referralInfo" style="display:none;">
+        <div class="referral-title">👥 Ваши рефералы</div>
+        <div class="referral-stats">
+            <div class="stat">
+                <div class="stat-value" id="refCount">0</div>
+                <div class="stat-label">Рефералов</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="refEarnings">0.000</div>
+                <div class="stat-label">Заработано</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="refBonus">0.5</div>
+                <div class="stat-label">Бонус за реферала</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        🪙 Coin Tap Bot v1.0
+    </div>
+</div>
+
+<!-- Modals -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title" id="modalTitle"></div>
+            <button class="modal-close" onclick="closeModal()">×</button>
+        </div>
+        <div id="modalContent"></div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Debug Info -->
+<div class="debug" id="debug">Debug: -</div>
+
+<script>
+    // ====== КОНСТАНТЫ ======
+    const TAP_VALUE = 0.001;
+    const MAX_ENERGY = 10;
+    const ENERGY_REGEN_TIME = 5000;
+    const REF_BONUS = 0.5;
+
+    // ====== СОСТОЯНИЕ ======
+    let state = {
+        coins: 0,
+        energy: MAX_ENERGY,
+        refCount: 0,
+        refEarnings: 0,
+        telegramId: null,
+        username: null,
+        wallet: null,
+        referredBy: null,
+        lastUpdate: Date.now()
+    };
+
+    // ====== DOM ЭЛЕМЕНТЫ ======
+    const elements = {
+        balance: document.getElementById('balance'),
+        coin: document.getElementById('coin'),
+        energyText: document.getElementById('energyText'),
+        energyFill: document.getElementById('energyFill'),
+        username: document.getElementById('username'),
+        userId: document.getElementById('userId'),
+        avatar: document.getElementById('avatar'),
+        toast: document.getElementById('toast'),
+        debug: document.getElementById('debug'),
+        modalOverlay: document.getElementById('modalOverlay'),
+        modalTitle: document.getElementById('modalTitle'),
+        modalContent: document.getElementById('modalContent'),
+        referralInfo: document.getElementById('referralInfo'),
+        refCount: document.getElementById('refCount'),
+        refEarnings: document.getElementById('refEarnings')
+    };
+
+    // ====== TELEGRAM ИНИЦИАЛИЗАЦИЯ ======
+    function initTelegram() {
+        if (window.Telegram?.WebApp) {
+            const tg = window.Telegram.WebApp;
+            tg.ready();
+            tg.expand();
+
+            const user = tg.initDataUnsafe?.user;
+            if (user) {
+                state.telegramId = user.id;
+                state.username = user.username || user.first_name;
+                elements.username.textContent = state.username;
+                elements.userId.textContent = 'ID: ' + state.telegramId;
+                elements.avatar.textContent = (state.username || '?')[0].toUpperCase();
+            }
+
+            // Реферальная система
+            const startParam = tg.initDataUnsafe?.start_param;
+            if (startParam && startParam !== String(state.telegramId)) {
+                state.referredBy = startParam;
+                processReferral(startParam);
+            }
+
+            // Загрузка данных
+            loadFromCloud();
+        } else {
+            // Fallback для браузера
+            console.log('Telegram WebApp не найден');
+            elements.username.textContent = 'Тест';
+            elements.userId.textContent = 'ID: browser';
+            loadLocal();
         }
     }
-}
 
-// ====== ЧАСТЬ 8: ЗАПУСК ======
-// Элементы DOM
-const coin = document.getElementById('coin');
-const coinCount = document.getElementById('coinCount');
-const energyText = document.getElementById('energyText');
-const energyFill = document.getElementById('energyFill');
-const refCountEl = document.getElementById('refCount');
+    // ====== CLOUD STORAGE ======
+    function getStorageKey() {
+        return 'coin_game_' + (state.telegramId || 'guest');
+    }
 
-// События
-coin.addEventListener('click', tapCoin);
+    function saveToCloud() {
+        if (window.Telegram?.WebApp?.CloudStorage) {
+            const data = JSON.stringify({
+                coins: state.coins,
+                energy: state.energy,
+                refCount: state.refCount,
+                refEarnings: state.refEarnings,
+                wallet: state.wallet,
+                referredBy: state.referredBy,
+                lastUpdate: Date.now()
+            });
 
-// Автовосстановление энергии каждые 5 сек
-setInterval(updateEnergy, ENERGY_REGEN_TIME);
+            window.Telegram.WebApp.CloudStorage.setItem(getStorageKey(), data, (error) => {
+                if (error) {
+                    console.error('Ошибка сохранения:', error);
+                    saveLocal();
+                }
+            });
+        } else {
+            saveLocal();
+        }
+    }
 
-// Запуск
-initTelegram();
-</script>
+    function loadFromCloud() {
+        if (window.Telegram?.WebApp?.CloudStorage) {
+            window.Telegram.WebApp.CloudStorage.getItem(getStorageKey(), (error, value) => {
+                if (value) {
+                    try {
+                        const data = JSON.parse(value);
+                        Object.assign(state, data);
+                        console.log('Данные загружены из облака');
+                    } catch (e) {
+                        console.error('Ошибка парсинга:', e);
+                    }
+                } else {
+                    console.log('Новый пользователь');
+                }
+                updateUI();
+            });
+        } else {
+            loadLocal();
+        }
+    }
+
+    function saveLocal() {
+        localStorage.setItem(getStorageKey(), JSON.stringify(state));
+    }
+
+    function loadLocal() {
+        const saved = localStorage.getItem(getStorageKey());
+        if (saved) {
+            try {
+                Object.assign(state, JSON.parse(saved));
+                console.log('Данные загружены локально');
+            } catch (e) {
+                console.error('Ошибка загрузки локальных данных');
+            }
+        }
+        updateUI();
+    }
+
+    // ====== ИГРОВАЯ ЛОГИКА ======
+    function tapCoin(event) {
+                        if (state.energy < 1) {
+                    showToast('⚡ Недостаточно энергии!');
+                    return;
+                }
+
+                // Отнимаем энергию
+                state.energy--;
+
+                // Добавляем монеты
+                state.coins += TAP_VALUE;
+
+                // Визуальный эффект
+                showFloatingNumber(event, '+$' + TAP_VALUE.toFixed(3));
+
+                // Обновляем интерфейс
+                updateUI();
+
+                // Сохраняем
+                saveToCloud();
+
+                // Вибрация
+                vibrate(20);
+            }
+
+            function showFloatingNumber(event, text) {
+                const num = document.createElement('div');
+                num.className = 'floating-number';
+                num.textContent = text;
+
+                const rect = elements.coin.getBoundingClientRect();
+                num.style.left = (event.clientX - rect.left) + 'px';
+                num.style.top = (event.clientY - rect.top) + 'px';
+
+                elements.coin.appendChild(num);
+                setTimeout(() => num.remove(), 1000);
+            }
+
+            function vibrate(duration) {
+                if (navigator.vibrate) {
+                    navigator.vibrate(duration);
+                }
+            }
+
+            // ====== ЭНЕРГИЯ ======
+            function regenEnergy() {
+                if (state.energy < MAX_ENERGY) {
+                    state.energy++;
+                    updateUI();
+                    saveToCloud();
+                }
+                setTimeout(regenEnergy, ENERGY_REGEN_TIME);
+            }
+
+            // ====== РЕФЕРАЛЬНАЯ СИСТЕМА ======
+            function processReferral(refId) {
+                showToast('👥 Вы пришли по рефералу!');
+                state.refCount++;
+                state.refEarnings += REF_BONUS;
+                saveToCloud();
+            }
+
+            function showReferral() {
+                const tg = window.Telegram?.WebApp;
+                let refLink = '';
+
+                if (tg && state.telegramId) {
+                    refLink = 'https://t.me/' + tg.initDataUnsafe?.user?.username + '?start=' + state.telegramId;
+                } else {
+                    refLink = 'https://t.me/your_bot_username?start=' + (state.telegramId || 'test');
+                }
+
+                elements.modalTitle.textContent = '👥 Реферальная система';
+                elements.modalContent.innerHTML = `
+                    <p style="margin-bottom:15px;color:#888;">
+                        Приглашайте друзей и получайте <b style="color:#ffd700;">+${REF_BONUS} монет</b> за каждого!
+                    </p>
+
+                    <div class="referral-link">
+                        <input type="text" value="${refLink}" readonly onclick="this.select()">
+                        <button class="copy-btn" onclick="copyRefLink()">📋</button>
+                    </div>
+
+                    <div style="margin-top:15px;padding:15px;background:rgba(255,255,255,0.05);border-radius:10px;">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+                            <span>Рефералов</span>
+                            <b style="color:#ffd700;">${state.refCount}</b>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;">
+                            <span>Заработано</span>
+                            <b style="color:#ffd700;">$${state.refEarnings.toFixed(3)}</b>
+                        </div>
+                    </div>
+                `;
+                openModal();
+            }
+
+            function copyRefLink() {
+                const input = document.querySelector('.referral-link input');
+                input.select();
+                document.execCommand('copy');
+                showToast('✅ Ссылка скопирована!');
+            }
+
+            // ====== КОШЕЛЁК ======
+            function showWallet() {
+                elements.modalTitle.textContent = '💎 Кошелёк';
+                elements.modalContent.innerHTML = `
+                    <p style="margin-bottom:15px;color:#888;">
+                        Подключите кошелёк для вывода средств
+                    </p>
+                    <input class="wallet-input" type="text" placeholder="Ваш TON адрес" value="${state.wallet || ''}" id="walletInput">
+                    <div style="display:flex;gap:10px;margin-top:15px;">
+                        <button class="copy-btn" style="flex:1;" onclick="saveWallet()">💾 Сохранить</button>
+                        <button class="copy-btn" style="flex:1;background:#ff6b6b;color:#fff;" onclick="closeModal()">Отмена</button>
+                    </div>
+                `;
+                openModal();
+            }
+
+            function saveWallet() {
+                const input = document.getElementById('walletInput');
+                state.wallet = input.value;
+                saveToCloud();
+                showToast('✅ Кошелёк сохранён');
+                closeModal();
+            }
+
+            // ====== БУСТЕРЫ ======
+            function showBoosters() {
+                elements.modalTitle.textContent = '⚡ Бустеры';
+                elements.modalContent.innerHTML = `
+                    <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:15px;margin-bottom:15px;">
+                        <div style="font-size:18px;margin-bottom:5px;">💪 Множитель x2</div>
+                        <div style="color:#888;font-size:12px;">Увеличивает доход в 2 раза на 5 минут</div>
+                        <button class="copy-btn" style="width:100%;margin-top:10px;background:linear-gradient(135deg,#ffd700,#ff6b00);color:#000;" onclick="activateBooster('x2')">Активировать - $0.5</button>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:15px;margin-bottom:15px;">
+                        <div style="font-size:18px;margin-bottom:5px;">⚡ Энергия x2</div>
+                        <div style="color:#888;font-size:12px;">Увеличивает максимальную энергию до 20</div>
+                        <button class="copy-btn" style="width:100%;margin-top:10px;background:linear-gradient(135deg,#ffd700,#ff6b00);color:#000;" onclick="activateBooster('energy')">Активировать - $0.3</button>
+                    </div>
+                `;
+                openModal();
+            }
+
+            function activateBooster(type) {
+                if (type === 'x2' && state.coins >= 0.5) {
+                    state.coins -= 0.5;
+                    showToast('💪 Множитель x2 активирован!');
+                    // Здесь можно добавить логику множителя
+                } else if (type === 'energy' && state.coins >= 0.3) {
+                    state.coins -= 0.3;
+                    showToast('⚡ Энергия x2 активирована!');
+                    // Здесь можно добавить логику энергии
+                } else {
+                    showToast('❌ Недостаточно средств');
+                }
+                updateUI();
+                saveToCloud();
+            }
+
+            // ====== ЗАДАНИЯ ======
+            function showTasks() {
+                elements.modalTitle.textContent = '📋 Задания';
+                elements.modalContent.innerHTML = `
+                    <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:15px;margin-bottom:10px;">
+                        <div style="font-size:16px;">📢 Подписаться на канал</div>
+                        <div style="color:#888;font-size:12px;">+$0.1</div>
+                        <button class="copy-btn" style="width:100%;margin-top:10px;" onclick="completeTask(0.1)">Выполнить</button>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:15px;margin-bottom:10px;">
+                        <div style="font-size:16px;">👥 Пригласить 1 друга</div>
+                        <div style="color:#888;font-size:12px;">+$0.5</div>
+                        <button class="copy-btn" style="width:100%;margin-top:10px;" onclick="completeTask(0.5)">Выполнить</button>
+                    </div>
+                `;
+                openModal();
+            }
+
+            function completeTask(reward) {
+                state.coins += reward;
+                showToast('✅ Награда получена: +$' + reward.toFixed(3));
+                updateUI();
+                saveToCloud();
+                closeModal();
+            }
+
+            // ====== НАСТРОЙКИ ======
+            function showSettings() {
+                elements.modalTitle.textContent = '⚙️ Настройки';
+                elements.modalContent.innerHTML = `
+                    <div style="margin-bottom:15px;">
+                        <div style="color:#888;margin-bottom:5px;">Ваш ID:</div>
+                        <div style="background:rgba(255,255,255,0.05);padding:10px;border-radius:10px;color:#ffd700;">${state.telegramId || 'Не определён'}</div>
+                    </div>
+                    <div style="margin-bottom:15px;">
+                        <div style="color:#888;margin-bottom:5px;">Версия:</div>
+                        <div style="background:rgba(255,255,255,0.05);padding:10px;border-radius:10px;">v1.0.0</div>
+                    </div>
+                    <button class="copy-btn" style="width:100%;background:#ff6b6b;color:#fff;" onclick="resetData()">🔄 Сбросить данные</button>
+                `;
+                openModal();
+            }
+
+            function resetData() {
+                if (confirm('Вы уверены? Все данные будут удалены!')) {
+                    state = {
+                        coins: 0,
+                        energy: MAX_ENERGY,
+                        refCount: 0,
+                        refEarnings: 0,
+                        telegramId: state.telegramId,
+                        username: state.username,
+                        wallet: null,
+                        referredBy: null,
+                        lastUpdate: Date.now()
+                    };
+                    saveToCloud();
+                    updateUI();
+                    showToast('✅ Данные сброшены');
+                    closeModal();
+                }
+            }
+
+            // ====== UI ОБНОВЛЕНИЕ ======
+            function updateUI() {
+                elements.balance.textContent = '$' + state.coins.toFixed(3);
+                elements.energyText.textContent = state.energy + ' / ' + MAX_ENERGY;
+                elements.energyFill.style.width = (state.energy / MAX_ENERGY * 100) + '%';
+
+                // Обновляем рефералы
+                elements.refCount.textContent = state.refCount;
+                elements.refEarnings.textContent = '$' + state.refEarnings.toFixed(3);
+
+                // Debug
+                elements.debug.textContent = 'Debug: ' + (window.Telegram?.WebApp ? 'TG' : 'Browser');
+            }
+
+            // ====== TOAST ======
+            function showToast(message) {
+                elements.toast.textContent = message;
+                elements.toast.classList.add('show');
+                setTimeout(() => elements.toast.classList.remove('show'), 2000);
+            }
+
+            // ====== МОДАЛЬНЫЕ ОКНА ======
+            function openModal() {
+                elements.modalOverlay.classList.add('show');
+            }
+
+            function closeModal(event) {
+                if (event && event.target === elements.modalOverlay) {
+                    elements.modalOverlay.classList.remove('show');
+                } else if (!event) {
+                    elements.modalOverlay.classList.remove('show');
+                }
+            }
+
+            // ====== ИНИЦИАЛИЗАЦИЯ ======
+            document.addEventListener('DOMContentLoaded', () => {
+                initTelegram();
+                regenEnergy();
+                setInterval(saveToCloud, 30000);
+            });
+        </script>
+    </body>
+    </html>
