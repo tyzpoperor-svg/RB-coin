@@ -411,6 +411,23 @@ tapCoin = function() {
     vibrate();
     originalTap();
 };
+    // ====== FIREBASE ИНИЦИАЛИЗАЦИЯ ======
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyCMh72QkCwgUKtSb89b38FXsIB8iVn2xd0",
+    authDomain: "rbcoin-official.firebaseapp.com",
+    projectId: "rbcoin-official",
+    storageBucket: "rbcoin-official.firebasestorage.app",
+    messagingSenderId: "709344104087",
+    appId: "1:709344104087:web:d7c7551a3e200858e963d2",
+    measurementId: "G-PPBH2KE7VW"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 </script>
 </body>
 </html>
