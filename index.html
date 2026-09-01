@@ -49,16 +49,6 @@ canvas#stars { position: fixed; top: 0; left: 0; z-index: 0; }
 .btn:hover { opacity: 0.8; }
 .btn.telegram { background: linear-gradient(45deg, #229ED9, #50a7e7); }
 .btn.referral { background: linear-gradient(45deg, #f093fb, #f5576c); }
-
-/* Анимации */
-@keyframes floatUp {
-    from { opacity: 1; transform: translate(-50%, 0); }
-    to { opacity: 0; transform: translate(-50%, -50px); }
-}
-@keyframes slideDown {
-    from { transform: translate(-50%, -100%); opacity: 0; }
-    to { transform: translate(-50%, 0); opacity: 1; }
-}
 </style>
 </head>
 <body>
@@ -75,143 +65,56 @@ canvas#stars { position: fixed; top: 0; left: 0; z-index: 0; }
     </div>
 
     <!-- Монета -->
+    <div class="coin" id="coin"></div>
     <div class="coin" id="coin" onclick="tapCoin()"></div>
 
     <!-- Энергия -->
     <div class="energy-bar">
-        <div class="energy-fill" id="energyFill"></div>
-    </div>
-    <div class="energy-text" id="energyText">⚡ 10 / 10</div>
-
-    <!-- Реферальная ссылка -->
-    <button class="btn referral" onclick="copyReferral()">🎁 Реферальная ссылка</button>
-    <small style="color:#aaa; display:block; margin:5px;">Пригласите друзей: <span id="refCount">0</span></small>
-
-    <!-- Привязка кошелька -->
-    <button class="btn telegram" onclick="connectWallet()">💎 Привязать TON-кошелёк</button>
-
-    <!-- Регистрация -->
-    <button class="btn" onclick="registerAccount()">👤 Регистрация / Привязка Telegram</button>
-
-    <!-- Инфо -->
-    <small style="color:#666; display:block; margin-top:15px;">
-        ⚡ Энергия: +1 / 5 сек | 🪙 1 тап = 0.001 KOIN
-    </small>
+@@ -90,7 +90,7 @@
 </div>
 
 <script>
+// ====== ЧАСТЬ 3: ЖИВЫЕ ОБОИ - ПАДАЮЩИЕ ЗВЁЗДЫ ======
 // ====== ЖИВЫЕ ОБОИ - ПАДАЮЩИЕ ЗВЁЗДЫ ======
 const canvas = document.getElementById('stars');
 const ctx = canvas.getContext('2d');
 let stars = [];
-let animFrame;
-
-function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
-
-function createStar() {
-    return {
-        x: Math.random() * canvas.width,
-        y: -10,
-        speed: Math.random() * 2 + 1,
-        size: Math.random() * 2 + 1,
-        opacity: Math.random() * 0.8 + 0.2
-    };
-}
-
-function initStars(count) {
-    stars = [];
-    for (let i = 0; i < count; i++) {
-        const s = createStar();
-        s.y = Math.random() * canvas.height;
-        stars.push(s);
-    }
-}
-
-function drawStars() {
-    if (!ctx) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    stars.forEach(s => {
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255,255,255,${s.opacity})`;
-        ctx.fill();
-        s.y += s.speed;
-        if (s.y > canvas.height + 10) { 
-            Object.assign(s, createStar()); 
-        }
-    });
-    animFrame = requestAnimationFrame(drawStars);
-}
+@@ -139,7 +139,7 @@
 initStars(150);
 drawStars();
+
+// ====== ЧАСТЬ 4: ОСНОВНЫЕ ПЕРЕМЕННЫЕ ИГРЫ ======
 // ====== ОСНОВНЫЕ ПЕРЕМЕННЫЕ ИГРЫ ======
 const DEFAULT_STATE = {
     coins: 0,
     energy: 10,
-    maxEnergy: 10,
-    energyRegenTime: 5000,
-    refCount: 0,
-    telegramId: null,
-    username: null,
-    registered: false,
-    wallet: null
-};
-
-let state = { ...DEFAULT_STATE };
-let energyRegenTimer = null;
-const TAP_VALUE = 0.001;
-
-// Элементы DOM
-const coin = document.getElementById('coin');
-const coinCount = document.getElementById('coinCount');
-const energyText = document.getElementById('energyText');
+@@ -163,13 +163,13 @@
 const energyFill = document.getElementById('energyFill');
 const refCountEl = document.getElementById('refCount');
 
+// ====== ЧАСТЬ 5: СОХРАНЕНИЕ И ЗАГРУЗКА ======
 // ====== СОХРАНЕНИЕ И ЗАГРУЗКА ======
 function saveState() {
-    try {
-        localStorage.setItem('rbCoinState', JSON.stringify(state));
-    } catch(e) {
-        console.error('Ошибка сохранения:', e);
-    }
+    localStorage.setItem('coinClickerState', JSON.stringify(state));
+    localStorage.setItem('rbCoinState', JSON.stringify(state));
 }
 
 function loadState() {
-    try {
-        const saved = localStorage.getItem('rbCoinState');
-        if (saved) {
+    const saved = localStorage.getItem('coinClickerState');
+    const saved = localStorage.getItem('rbCoinState');
+    if (saved) {
+        try {
             state = { ...DEFAULT_STATE, ...JSON.parse(saved) };
+@@ -187,23 +187,22 @@
+            state.username = user.username || user.first_name;
+            state.registered = true;
+            saveState();
+            syncFromServer();
         }
-    } catch(e) { 
-        console.error('Ошибка загрузки:', e);
-        state = { ...DEFAULT_STATE };
     }
 }
 
-function initTelegram() {
-    try {
-        if (window.Telegram && window.Telegram.WebApp) {
-            const tg = window.Telegram.WebApp;
-            tg.ready();
-            const user = tg.initDataUnsafe?.user;
-            if (user) {
-                state.telegramId = user.id;
-                state.username = user.username || user.first_name;
-                state.registered = true;
-                saveState();
-            }
-        }
-    } catch(e) {
-        console.error('Ошибка Telegram:', e);
-    }
-}
-
+// ====== ЧАСТЬ 6: РЕФЕРАЛЬНАЯ СИСТЕМА ======
 // ====== РЕФЕРАЛЬНАЯ СИСТЕМА ======
 function getReferralLink() {
     const userId = state.telegramId || generateLocalId();
@@ -220,266 +123,174 @@ function getReferralLink() {
 }
 
 function generateLocalId() {
-    try {
-        if (!localStorage.getItem('rbLocalUserId')) {
-            localStorage.setItem('rbLocalUserId', Math.random().toString(36).slice(2));
-        }
-        return localStorage.getItem('rbLocalUserId');
-    } catch(e) {
-        return Math.random().toString(36).slice(2);
+    if (!localStorage.getItem('localUserId')) {
+        localStorage.setItem('localUserId', Math.random().toString(36).slice(2));
+    if (!localStorage.getItem('rbLocalUserId')) {
+        localStorage.setItem('rbLocalUserId', Math.random().toString(36).slice(2));
     }
+    return localStorage.getItem('localUserId');
+    return localStorage.getItem('rbLocalUserId');
 }
 
 function checkReferral() {
-    try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const startParam = urlParams.get('start') || 
-                          (window.Telegram?.WebApp?.initDataUnsafe?.start_param);
+@@ -213,15 +212,47 @@
 
-        if (startParam) {
-            const referrerId = startParam;
-            localStorage.setItem('rbReferredBy', referrerId);
-            state.refCount++;
-            saveState();
-            updateReferralUI();
-            showToast('🎁 Вы пришли по реферальной ссылке!');
-        }
-    } catch(e) {
-        console.error('Ошибка реферальной системы:', e);
+    if (startParam) {
+        const referrerId = startParam;
+        localStorage.setItem('referredBy', referrerId);
+        localStorage.setItem('rbReferredBy', referrerId);
+        state.refCount++;
+        saveState();
+        console.log('Вы пришли по рефссылке! Реферер:', referrerId);
+        updateReferralUI();
+        showToast('🎁 Вы пришли по реферальной ссылке!');
     }
 }
 
+// ====== ЧАСТЬ 7: ЭНЕРГИЯ И КЛИКИ ======
 function copyReferral() {
     const link = getReferralLink();
 
     // Копирование в буфер обмена
-    if (navigator.clipboard && navigator.clipboard.writeText) {
+    if (navigator.clipboard) {
         navigator.clipboard.writeText(link).then(() => {
             showToast('✅ Ссылка скопирована!');
-        }).catch(() => {
-            fallbackCopy(link);
         });
     } else {
-        fallbackCopy(link);
+        // Fallback для старых браузеров
+        const textarea = document.createElement('textarea');
+        textarea.value = link;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        showToast('✅ Ссылка скопирована!');
     }
 
     // Отправка в Telegram
-    try {
-        if (window.Telegram?.WebApp) {
-            window.Telegram.WebApp.sendData(JSON.stringify({
-                action: 'share_referral',
-                link: link
-            }));
-        }
-    } catch(e) {
-        console.error('Ошибка отправки в Telegram:', e);
+    if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.sendData(JSON.stringify({
+            action: 'share_referral',
+            link: link
+        }));
     }
-}
-
-function fallbackCopy(text) {
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    textarea.style.position = 'fixed';
-    textarea.style.opacity = '0';
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textarea);
-    showToast('✅ Ссылка скопирована!');
 }
 
 function updateReferralUI() {
-    if (refCountEl) {
-        refCountEl.textContent = state.refCount;
-    }
+    refCountEl.textContent = state.refCount;
 }
+
 // ====== ЭНЕРГИЯ И КЛИКИ ======
 function updateEnergyDisplay() {
-    if (!energyText || !energyFill) return;
-
-    energyText.textContent = `⚡ 
-{state.maxEnergy}`;
+    energyText.textContent = `⚡ ${Math.floor(state.energy)} / ${state.maxEnergy}`;
     energyFill.style.width = (state.energy / state.maxEnergy * 100) + '%';
-
-    if (state.energy <= 0) {
-        energyFill.style.background = '#f00';
-    } else {
-        energyFill.style.background = 'linear-gradient(90deg, #00f, #0ff)';
-    }
+@@ -263,12 +294,12 @@
+    showFloatingNumber('+' + TAP_VALUE);
 }
 
-function startEnergyRegen() {
-    if (energyRegenTimer) clearInterval(energyRegenTimer);
-    energyRegenTimer = setInterval(() => {
-        if (state.energy < state.maxEnergy) {
-            state.energy += 1;
-            saveState();
-            updateEnergyDisplay();
-        }
-    }, state.energyRegenTime);
-}
-
-function tapCoin() {
-    if (!state || !coin) return;
-
-    if (state.energy < 1) {
-        showToast('Нет энергии! Подождите ⚡');
-        return;
-    }
-   // Сохраняем состояние
-    saveState();
-}
-
-function updateCoinDisplay() {
-    if (coinCount) {
-        coinCount.textContent = state.coins.toFixed(3);
-    }
-}
-
-function createFloatingNumber() {
-    const num = document.createElement('div');
-    num.textContent = `+${TAP_VALUE}`;
-    num.style.cssText = `
-        position: fixed;
-        color: #ffd700;
-        font-size: 20px;
-        font-weight: bold;
-        pointer-events: none;
-        z-index: 1000;
-        animation: floatUp 0.5s forwards;
-    `;
-
-    // Позиционируем над монетой
-    const rect = coin.getBoundingClientRect();
-    num.style.left = rect.left + rect.width / 2 + 'px';
-    num.style.top = rect.top + 'px';
-
-    document.body.appendChild(num);
-
-    // Удаляем через 500ms
-    setTimeout(() => num.remove(), 500);
-}
-
-function showToast(message) {
-    const toast = document.createElement('div');
-    toast.textContent = message;
-    toast.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(0, 0, 0, 0.8);
-        color: white;
-        padding: 10px 20px;
-        border-radius: 10px;
-        z-index: 1000;
-        animation: slideDown 0.3s ease;
-    `;
-
-    document.body.appendChild(toast);
-
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transition = 'opacity 0.5s';
-        setTimeout(() => toast.remove(), 500);
-    }, 2000);
-}
-
+// ====== ЧАСТЬ 8: ДОПОЛНИТЕЛЬНЫЕ ФУНКЦИИ ======
 // ====== ДОПОЛНИТЕЛЬНЫЕ ФУНКЦИИ ======
-function connectWallet() {
-    showToast('💎 Привязка кошелька будет доступна скоро!');
-}
+function showFloatingNumber(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    div.style.cssText = `
+        position: absolute; left: 50%; top: 40%;
+        position: fixed; left: 50%; top: 40%;
+        transform: translateX(-50%); color: #ffd700;
+        font-size: 24px; font-weight: bold; pointer-events: none;
+        z-index: 10; text-shadow: 0 0 10px #ffd700;
+@@ -303,7 +334,7 @@
+}`;
+document.head.appendChild(style);
 
-function registerAccount() {
-    showToast('👤 Регистрация через Telegram...');
-    initTelegram();
-    if (state.registered) {
-        showToast('✅ Аккаунт привязан!');
+// ====== ЧАСТЬ 9: КОШЕЛЁК И РЕГИСТРАЦИЯ ======
+// ====== КОШЕЛЁК И РЕГИСТРАЦИЯ ======
+function connectWallet() {
+    if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.sendData(JSON.stringify({ action: 'connect_wallet' }));
+@@ -332,49 +363,54 @@
+            state.username = user.username || user.first_name;
+            state.registered = true;
+            saveState();
+            showToast('✅ Аккаунт привязан к Telegram!');
+            showToast('✅ Авторизация успешна!');
+        } else {
+            showToast('❌ Не удалось получить данные Telegram');
+        }
+    } else {
+        const username = prompt('Введите ваш Telegram username (без @):');
+        if (username) {
+            state.username = username;
+            state.registered = true;
+            saveState();
+            showToast('✅ Аккаунт создан!');
+        }
+        showToast('❌ Откройте через Telegram WebApp');
     }
 }
 
+function syncFromServer() {
 // ====== ИНИЦИАЛИЗАЦИЯ ======
 function init() {
     loadState();
+    updateAllUI();
+}
     initTelegram();
     checkReferral();
-    updateCoinDisplay();
     updateEnergyDisplay();
     updateReferralUI();
+    coinCount.textContent = state.coins.toFixed(3);
     startEnergyRegen();
+
+// ====== ЧАСТЬ 10: ОБРАБОТЧИКИ И ЗАПУСК ======
+function copyReferral() {
+    const link = getReferralLink();
+    navigator.clipboard.writeText(link).then(() => {
+        showToast('🔗 Ссылка скопирована!');
+    });
+    console.log('✅ RB coin запущен!');
+    console.log('👤 Пользователь:', state.username || 'Гость');
+    console.log('🪙 Баланс:', state.coins.toFixed(3), 'KOIN');
 }
 
-// Запускаем приложение
-document.addEventListener('DOMContentLoaded', init);
-// Функция tapCoin - обрабатывает клик по монете
-function tapCoin() {
-    if (!state || !coin) return;
-
-    // Проверка энергии
-    if (state.energy < 1) {
-        showToast('Нет энергии! Подождите ⚡');
-        return;
-    }
-
-    // Уменьшаем энергию
-    state.energy -= 1;
-
-    // Добавляем монеты
-    state.coins += TAP_VALUE;
-
-    // Округляем до 3 знаков после запятой
-    state.coins = Math.round(state.coins * 1000) / 1000;
-
-    // Обновляем UI
+function updateAllUI() {
     coinCount.textContent = state.coins.toFixed(3);
     updateEnergyDisplay();
+    refCountEl.textContent = state.refCount;
+}
+// Запуск при загрузке
+document.addEventListener('DOMContentLoaded', init);
 
-    // Сохраняем состояние
-    saveState();
+coin.addEventListener('click', tapCoin);
+// Обработка паузы при сворачивании
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        // Сохраняем при уходе
+        saveState();
+    }
+});
 
-    // Показываем анимацию "+0.001"
-    showFloatingText('+' + TAP_VALUE);
+loadState();
+initTelegram();
+checkReferral();
+updateAllUI();
+startEnergyRegen();
+// Вибрация при клике (для мобильных)
+function vibrate(duration = 20) {
+    if (navigator.vibrate) {
+        navigator.vibrate(duration);
+    }
 }
 
-// Вспомогательная функция для анимации
-function showFloatingText(text) {
-    const el = document.createElement('div');
-    el.textContent = text;
-    el.style.cssText = `
-        position: fixed;
-        left: 50%;
-        top: 50%;
-        color: #ffd700;
-        font-size: 20px;
-        font-weight: bold;
-        pointer-events: none;
-        animation: floatUp 1s forwards;
-        z-index: 100;
-    `;
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 1000);
-}
-
-// Функция showToast (добавь если ещё нет)
-function showToast(msg) {
-    const toast = document.createElement('div');
-    toast.textContent = msg;
-    toast.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(0,0,0,0.8);
-        color: #fff;
-        padding: 10px 20px;
-        border-radius: 10px;
-        z-index: 100;
-        animation: slideDown 0.3s;
-    `;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 2000);
-}
-
+window.addEventListener('beforeunload', () => {
+    if (energyRegenTimer) clearInterval(energyRegenTimer);
+});
+// Добавляем вибрацию в tapCoin
+const originalTap = tapCoin;
+tapCoin = function() {
+    vibrate();
+    originalTap();
+};
 </script>
 </body>
 </html>
