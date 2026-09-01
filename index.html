@@ -49,6 +49,16 @@ canvas#stars { position: fixed; top: 0; left: 0; z-index: 0; }
 .btn:hover { opacity: 0.8; }
 .btn.telegram { background: linear-gradient(45deg, #229ED9, #50a7e7); }
 .btn.referral { background: linear-gradient(45deg, #f093fb, #f5576c); }
+
+/* Анимации */
+@keyframes floatUp {
+    from { opacity: 1; transform: translate(-50%, 0); }
+    to { opacity: 0; transform: translate(-50%, -50px); }
+}
+@keyframes slideDown {
+    from { transform: translate(-50%, -100%); opacity: 0; }
+    to { transform: translate(-50%, 0); opacity: 1; }
+}
 </style>
 </head>
 <body>
@@ -123,6 +133,7 @@ function initStars(count) {
 }
 
 function drawStars() {
+    if (!ctx) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     stars.forEach(s => {
         ctx.beginPath();
@@ -138,7 +149,6 @@ function drawStars() {
 }
 initStars(150);
 drawStars();
-
 // ====== ОСНОВНЫЕ ПЕРЕМЕННЫЕ ИГРЫ ======
 const DEFAULT_STATE = {
     coins: 0,
@@ -165,29 +175,40 @@ const refCountEl = document.getElementById('refCount');
 
 // ====== СОХРАНЕНИЕ И ЗАГРУЗКА ======
 function saveState() {
-    localStorage.setItem('rbCoinState', JSON.stringify(state));
+    try {
+        localStorage.setItem('rbCoinState', JSON.stringify(state));
+    } catch(e) {
+        console.error('Ошибка сохранения:', e);
+    }
 }
 
 function loadState() {
-    const saved = localStorage.getItem('rbCoinState');
-    if (saved) {
-        try {
+    try {
+        const saved = localStorage.getItem('rbCoinState');
+        if (saved) {
             state = { ...DEFAULT_STATE, ...JSON.parse(saved) };
-        } catch(e) { console.error('Ошибка загрузки'); }
+        }
+    } catch(e) { 
+        console.error('Ошибка загрузки:', e);
+        state = { ...DEFAULT_STATE };
     }
 }
 
 function initTelegram() {
-    if (window.Telegram?.WebApp) {
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        const user = tg.initDataUnsafe?.user;
-        if (user) {
-            state.telegramId = user.id;
-            state.username = user.username || user.first_name;
-            state.registered = true;
-            saveState();
+    try {
+        if (window.Telegram && window.Telegram.WebApp) {
+            const tg = window.Telegram.WebApp;
+            tg.ready();
+            const user = tg.initDataUnsafe?.user;
+            if (user) {
+                state.telegramId = user.id;
+                state.username = user.username || user.first_name;
+                state.registered = true;
+                saveState();
+            }
         }
+    } catch(e) {
+        console.error('Ошибка Telegram:', e);
     }
 }
 
@@ -199,24 +220,32 @@ function getReferralLink() {
 }
 
 function generateLocalId() {
-    if (!localStorage.getItem('rbLocalUserId')) {
-        localStorage.setItem('rbLocalUserId', Math.random().toString(36).slice(2));
+    try {
+        if (!localStorage.getItem('rbLocalUserId')) {
+            localStorage.setItem('rbLocalUserId', Math.random().toString(36).slice(2));
+        }
+        return localStorage.getItem('rbLocalUserId');
+    } catch(e) {
+        return Math.random().toString(36).slice(2);
     }
-    return localStorage.getItem('rbLocalUserId');
 }
 
 function checkReferral() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const startParam = urlParams.get('start') || 
-                      window.Telegram?.WebApp?.initDataUnsafe?.start_param;
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const startParam = urlParams.get('start') || 
+                          (window.Telegram?.WebApp?.initDataUnsafe?.start_param);
 
-    if (startParam) {
-        const referrerId = startParam;
-        localStorage.setItem('rbReferredBy', referrerId);
-        state.refCount++;
-        saveState();
-        updateReferralUI();
-        showToast('🎁 Вы пришли по реферальной ссылке!');
+        if (startParam) {
+            const referrerId = startParam;
+            localStorage.setItem('rbReferredBy', referrerId);
+            state.refCount++;
+            saveState();
+            updateReferralUI();
+            showToast('🎁 Вы пришли по реферальной ссылке!');
+        }
+    } catch(e) {
+        console.error('Ошибка реферальной системы:', e);
     }
 }
 
@@ -224,36 +253,50 @@ function copyReferral() {
     const link = getReferralLink();
 
     // Копирование в буфер обмена
-    if (navigator.clipboard) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(link).then(() => {
             showToast('✅ Ссылка скопирована!');
+        }).catch(() => {
+            fallbackCopy(link);
         });
     } else {
-        // Fallback для старых браузеров
-        const textarea = document.createElement('textarea');
-        textarea.value = link;
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-        showToast('✅ Ссылка скопирована!');
+        fallbackCopy(link);
     }
 
     // Отправка в Telegram
-    if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.sendData(JSON.stringify({
-            action: 'share_referral',
-            link: link
-        }));
+    try {
+        if (window.Telegram?.WebApp) {
+            window.Telegram.WebApp.sendData(JSON.stringify({
+                action: 'share_referral',
+                link: link
+            }));
+        }
+    } catch(e) {
+        console.error('Ошибка отправки в Telegram:', e);
     }
 }
 
-function updateReferralUI() {
-    refCountEl.textContent = state.refCount;
+function fallbackCopy(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    showToast('✅ Ссылка скопирована!');
 }
 
+function updateReferralUI() {
+    if (refCountEl) {
+        refCountEl.textContent = state.refCount;
+    }
+}
 // ====== ЭНЕРГИЯ И КЛИКИ ======
 function updateEnergyDisplay() {
+    if (!energyText || !energyFill) return;
+
     energyText.textContent = `⚡ ${Math.floor(state.energy)} / ${state.maxEnergy}`;
     energyFill.style.width = (state.energy / state.maxEnergy * 100) + '%';
 
@@ -276,6 +319,8 @@ function startEnergyRegen() {
 }
 
 function tapCoin() {
+    if (!state || !coin) return;
+
     if (state.energy < 1) {
         showToast('Нет энергии! Подождите ⚡');
         return;
@@ -285,7 +330,9 @@ function tapCoin() {
     state.coins += TAP_VALUE;
     saveState();
 
-    coinCount.textContent = state.coins.toFixed(3);
+    if (coinCount) {
+        coinCount.textContent = state.coins.toFixed(3);
+    }
     updateEnergyDisplay();
 
     coin.style.transform = 'scale(0.9)';
@@ -322,19 +369,42 @@ function showToast(msg) {
     setTimeout(() => toast.remove(), 2000);
 }
 
-const style = document.createElement('style');
-style.textContent = `
-@keyframes floatUp { 
-    from { opacity: 1; transform: translate(-50%, 0); }
-    to { opacity: 0; transform: translate(-50%, -80px); }
+// ====== ВИБРАЦИЯ ======
+function vibrate(duration = 20) {
+    if (navigator.vibrate) {
+        navigator.vibrate(duration);
+    }
 }
-@keyframes slideDown {
-    from { transform: translate(-50%, -100%); }
-    to { transform: translate(-50%, 0); }
-}`;
-document.head.appendChild(style);
+
+function addVibrationToTap() {
+    const coin = document.getElementById('coin');
+    if (coin) {
+        coin.addEventListener('click', () => vibrate(20));
+    }
+}
+// ====== FIREBASE ИНИЦИАЛИЗАЦИЯ ======
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyCMh72QkCwgUKtSb89b38FXsIB8iVn2xd0",
+    authDomain: "rbcoin-official.firebaseapp.com",
+    projectId: "rbcoin-official",
+    storageBucket: "rbcoin-official.firebasestorage.app",
+    messagingSenderId: "709344104087",
+    appId: "1:709344104087:web:d7c7551a3e200858e963d2",
+    measurementId: "G-PPBH2KE7VW"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 // ====== КОШЕЛЁК И РЕГИСТРАЦИЯ ======
+function validateWallet(address) {
+    const tonPattern = /^(EQ|UQ)[A-Za-z0-9_-]{46,48}$/;
+    return tonPattern.test(address);
+}
+
 function connectWallet() {
     if (window.Telegram?.WebApp) {
         window.Telegram.WebApp.sendData(JSON.stringify({ action: 'connect_wallet' }));
@@ -342,9 +412,13 @@ function connectWallet() {
     } else {
         const wallet = prompt('Введите адрес вашего TON-кошелька:');
         if (wallet) {
-            state.wallet = wallet;
-            saveState();
-            showToast('✅ Кошелёк привязан: ' + wallet.slice(0, 6) + '...');
+            if (validateWallet(wallet)) {
+                state.wallet = wallet;
+                saveState();
+                showToast('✅ Кошелёк привязан: ' + wallet.slice(0, 6) + '...');
+            } else {
+                showToast('❌ Некорректный адрес TON кошелька');
+            }
         }
     }
 }
@@ -362,8 +436,10 @@ function registerAccount() {
             state.telegramId = user.id;
             state.username = user.username || user.first_name;
             state.registered = true;
+            state.registrationDate = new Date().toISOString();
             saveState();
             showToast('✅ Авторизация успешна!');
+            syncToFirebase();
         } else {
             showToast('❌ Не удалось получить данные Telegram');
         }
@@ -372,16 +448,63 @@ function registerAccount() {
     }
 }
 
+// ====== FIREBASE СИНХРОНИЗАЦИЯ ======
+async function syncToFirebase() {
+    try {
+        const userRef = doc(db, 'users', state.telegramId || 'guest');
+        await setDoc(userRef, {
+            coins: state.coins,
+            energy: state.energy,
+            maxEnergy: state.maxEnergy,
+            wallet: state.wallet,
+            username: state.username,
+            referralCount: state.referralCount,
+            lastSync: new Date().toISOString()
+        });
+        console.log('✅ Данные синхронизированы с Firebase');
+    } catch(e) {
+        console.error('❌ Ошибка синхронизации:', e);
+    }
+}
+
+async function loadFromFirebase() {
+    try {
+        const userRef = doc(db, 'users', state.telegramId || 'guest');
+        const docSnap = await getDoc(userRef);
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            state.coins = data.coins || state.coins;
+            state.energy = data.energy || state.energy;
+            state.maxEnergy = data.maxEnergy || state.maxEnergy;
+            state.wallet = data.wallet || state.wallet;
+            console.log('✅ Данные загружены из Firebase');
+        }
+    } catch(e) {
+        console.error('❌ Ошибка загрузки:', e);
+    }
+}
+
 // ====== ИНИЦИАЛИЗАЦИЯ ======
 function init() {
     loadState();
     initTelegram();
     checkReferral();
-    updateEnergyDisplay();
-    updateReferralUI();
-    coinCount.textContent = state.coins.toFixed(3);
-    startEnergyRegen();
 
+    if (state.registered) {
+        loadFromFirebase().then(() => {
+            updateEnergyDisplay();
+            updateReferralUI();
+            coinCount.textContent = state.coins.toFixed(3);
+            startEnergyRegen();
+        });
+    } else {
+        updateEnergyDisplay();
+        updateReferralUI();
+        coinCount.textContent = state.coins.toFixed(3);
+        startEnergyRegen();
+    }
+
+    addVibrationToTap();
     console.log('✅ RB coin запущен!');
     console.log('👤 Пользователь:', state.username || 'Гость');
     console.log('🪙 Баланс:', state.coins.toFixed(3), 'KOIN');
@@ -393,41 +516,16 @@ document.addEventListener('DOMContentLoaded', init);
 // Обработка паузы при сворачивании
 document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
-        // Сохраняем при уходе
         saveState();
+        if (state.registered) {
+            syncToFirebase();
+        }
     }
 });
 
-// Вибрация при клике (для мобильных)
-function vibrate(duration = 20) {
-    if (navigator.vibrate) {
-        navigator.vibrate(duration);
+// Автосинхронизация каждые 30 секунд
+setInterval(() => {
+    if (state.registered && navigator.onLine) {
+        syncToFirebase();
     }
-}
-
-// Добавляем вибрацию в tapCoin
-const originalTap = tapCoin;
-tapCoin = function() {
-    vibrate();
-    originalTap();
-};
-    // ====== FIREBASE ИНИЦИАЛИЗАЦИЯ ======
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const firebaseConfig = {
-    apiKey: "AIzaSyCMh72QkCwgUKtSb89b38FXsIB8iVn2xd0",
-    authDomain: "rbcoin-official.firebaseapp.com",
-    projectId: "rbcoin-official",
-    storageBucket: "rbcoin-official.firebasestorage.app",
-    messagingSenderId: "709344104087",
-    appId: "1:709344104087:web:d7c7551a3e200858e963d2",
-    measurementId: "G-PPBH2KE7VW"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-<script>
-<body>
-<html>
+}, 30000);
