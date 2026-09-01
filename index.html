@@ -1,531 +1,360 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🪙 RB coin</title>
-<style>
-* { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
-body { 
-    background: #000; 
-    overflow: hidden; 
-    font-family: Arial, sans-serif; 
-    height: 100vh; 
-    display: flex; 
-    justify-content: center; 
-    align-items: center;
-}
-canvas#stars { position: fixed; top: 0; left: 0; z-index: 0; }
-.container { 
-    position: relative; z-index: 1; 
-    text-align: center; width: 100%; max-width: 400px; 
-    padding: 20px; 
-}
-.star { position: absolute; color: #fff; opacity: 0.8; z-index: 0; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>RB Coin - Tap to Earn</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #1a1a2e;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+        }
+        #app { max-width: 480px; margin: 0 auto; padding: 15px; }
 
-.coin {
-    width: 180px; height: 180px; border-radius: 50%;
-    cursor: pointer; transition: transform 0.1s;
-    box-shadow: 0 0 30px #ffd700, 0 0 60px #ffd700;
-    margin: 20px auto; display: block;
-    background: url('https://i.postimg.cc/h4MwsV6n/geekbot-ru-1788098202047.png') center/cover;
-}
-.coin:active { transform: scale(0.9); }
-.stats { color: #fff; margin: 10px; font-size: 24px; }
-.stats small { display: block; font-size: 14px; color: #aaa; }
-.energy-bar { 
-    background: #222; border-radius: 10px; padding: 3px; margin: 15px;
-}
-.energy-fill { 
-    background: linear-gradient(90deg, #00f, #0ff); height: 20px; 
-    border-radius: 8px; width: 100%; transition: width 0.3s;
-}
-.energy-text { color: #fff; margin: 10px; font-size: 14px; }
-.btn { 
-    background: linear-gradient(45deg, #0088cc, #00bfff); color: #fff; 
-    border: none; padding: 12px 20px; border-radius: 10px; 
-    margin: 5px; cursor: pointer; font-size: 14px; width: 90%;
-}
-.btn:hover { opacity: 0.8; }
-.btn.telegram { background: linear-gradient(45deg, #229ED9, #50a7e7); }
-.btn.referral { background: linear-gradient(45deg, #f093fb, #f5576c); }
+        /* Header */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background: #e94560; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .level-badge { background: #e94560; padding: 5px 12px; border-radius: 20px; font-size: 13px; cursor: pointer; }
 
-/* Анимации */
-@keyframes floatUp {
-    from { opacity: 1; transform: translate(-50%, 0); }
-    to { opacity: 0; transform: translate(-50%, -50px); }
-}
-@keyframes slideDown {
-    from { transform: translate(-50%, -100%); opacity: 0; }
-    to { transform: translate(-50%, 0); opacity: 1; }
-}
-</style>
+        /* Balance */
+        .balance-container { text-align: center; margin: 20px 0; }
+        .balance { font-size: 40px; font-weight: bold; color: #ffd700; }
+
+        /* Energy */
+        .energy-bar { height: 10px; background: #333; border-radius: 5px; overflow: hidden; }
+        .energy-fill { height: 100%; background: #e94560; transition: width 0.3s; }
+
+        /* Coin */
+        .coin-container { display: flex; justify-content: center; margin: 30px 0; }
+        .tap-coin {
+            width: 180px; height: 180px; border-radius: 50%;
+            background: radial-gradient(circle, #ffd700, #cc8400);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 70px; cursor: pointer;
+            box-shadow: 0 10px 30px rgba(255,215,0,0.3);
+            transition: transform 0.1s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .tap-coin:active { transform: scale(0.93); }
+
+        /* Stats */
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0; }
+        .stat-card { background: #2a2a3e; padding: 12px; border-radius: 10px; text-align: center; }
+        .stat-value { font-size: 18px; font-weight: bold; color: #ffd700; }
+        .stat-label { font-size: 12px; color: #aaa; }
+
+        /* Boosts */
+        .boost-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .boost-card { background: #2a2a3e; padding: 15px; border-radius: 10px; text-align: center; }
+        .buy-btn { background: #e94560; border: none; color: white; padding: 8px 15px; border-radius: 15px; cursor: pointer; margin-top: 10px; width: 100%; }
+
+        /* Tasks */
+        .task-card { background: #2a2a3e; padding: 12px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .task-btn { background: #4CAF50; color: white; border: none; padding: 8px 15px; border-radius: 15px; cursor: pointer; }
+
+        /* Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 100; }
+        .modal.active { display: flex; }
+        .modal-content { background: #1a1a2e; border-radius: 15px; padding: 20px; max-width: 350px; width: 90%; max-height: 80vh; overflow-y: auto; }
+        .close-btn { float: right; cursor: pointer; font-size: 20px; }
+
+        /* Toast */
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); padding: 10px 20px; border-radius: 20px; z-index: 200; }
+        .toast.success { background: #4CAF50; }
+        .toast.error { background: #f44336; }
+
+        /* Preloader */
+        .preloader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a2e; display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .loader { width: 50px; height: 50px; border: 5px solid #333; border-top-color: #e94560; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
 </head>
 <body>
 
-<canvas id="stars"></canvas>
-
-<div class="container">
-    <h2 style="color:#fff; margin-bottom:5px;">🪙 RB coin</h2>
-
-    <!-- Статистика -->
-    <div class="stats">
-        <span id="coinCount">0.000</span>
-        <small>KOIN</small>
+    <!-- Preloader -->
+    <div class="preloader" id="preloader">
+        <div class="loader"></div>
     </div>
 
-    <!-- Монета -->
-    <div class="coin" id="coin" onclick="tapCoin()"></div>
+    <!-- Main App -->
+    <div id="app">
+        <!-- Header -->
+        <div class="header">
+            <div class="avatar">😎</div>
+            <div>
+                <div id="username" style="font-weight: bold;">Player</div>
+                <div style="font-size: 12px; color: #aaa;">Уровень <span id="level">1</span></div>
+            </div>
+            <button class="level-badge" onclick="showAchievements()">🏆 0</button>
+        </div>
 
-    <!-- Энергия -->
-    <div class="energy-bar">
-        <div class="energy-fill" id="energyFill"></div>
+        <!-- Balance -->
+        <div class="balance-container">
+            <div style="color: #aaa; font-size: 13px;">Баланс (RB)</div>
+            <div class="balance" id="balance">0</div>
+        </div>
+
+        <!-- Energy -->
+        <div style="margin: 15px 0;">
+            <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px;">
+                <span>⚡ Энергия</span>
+                <span><span id="energy">1000</span>/1000</span>
+            </div>
+            <div class="energy-bar">
+                <div class="energy-fill" id="energyBar" style="width: 100%;"></div>
+            </div>
+        </div>
+
+        <!-- Coin -->
+        <div class="coin-container">
+            <div class="tap-coin" id="tapCoin">🪙</div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="clickPower">1</div>
+                <div class="stat-label">За тап</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalClicks">0</div>
+                <div class="stat-label">Тапов</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="passiveIncome">0</div>
+                <div class="stat-label">В час</div>
+            </div>
+        </div>
+
+        <!-- Boosts -->
+        <h3 style="margin-bottom: 10px;">🚀 Бусты</h3>
+        <div class="boost-grid">
+            <div class="boost-card">
+                <div style="font-size: 30px;">👆</div>
+                <div>Сила тапа</div>
+                <div style="color: #ffd700;">Ур. <span id="tapLevel">1</span></div>
+                <div style="font-size: 12px; color: #aaa;">Цена: <span id="tapCost">100</span></div>
+                <button class="buy-btn" onclick="upgradeTap()">Улучшить</button>
+            </div>
+            <div class="boost-card">
+                <div style="font-size: 30px;">⚡</div>
+                <div>Макс. энергия</div>
+                <div style="color: #ffd700;">Ур. <span id="energyLevel">1</span></div>
+                <div style="font-size: 12px; color: #aaa;">Цена: <span id="energyCost">200</span></div>
+                <button class="buy-btn" onclick="upgradeEnergy()">Улучшить</button>
+            </div>
+        </div>
+
+        <!-- Tasks -->
+        <h3 style="margin: 20px 0 10px;">📋 Задания</h3>
+        <div id="tasksContainer">
+            <div class="task-card">
+                <div>
+                    <div>Подписаться на канал</div>
+                    <div style="color: #ffd700; font-size: 13px;">+500 RB</div>
+                </div>
+                <button class="task-btn" onclick="completeTask(0)">Выполнить</button>
+            </div>
+            <div class="task-card">
+                <div>
+                    <div>Пригласить друга</div>
+                    <div style="color: #ffd700; font-size: 13px;">+1000 RB</div>
+                </div>
+                <button class="task-btn" onclick="completeTask(1)">Выполнить</button>
+            </div>
+        </div>
     </div>
-    <div class="energy-text" id="energyText">⚡ 10 / 10</div>
 
-    <!-- Реферальная ссылка -->
-    <button class="btn referral" onclick="copyReferral()">🎁 Реферальная ссылка</button>
-    <small style="color:#aaa; display:block; margin:5px;">Пригласите друзей: <span id="refCount">0</span></small>
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">✖</span>
+            <div id="modalBody"></div>
+        </div>
+    </div>
 
-    <!-- Привязка кошелька -->
-    <button class="btn telegram" onclick="connectWallet()">💎 Привязать TON-кошелёк</button>
+    <script>
+        // ============ ДАННЫЕ ИГРОКА ============
+        let gameData = {
+            balance: 0,
+            clickPower: 1,
+            energy: 1000,
+            maxEnergy: 1000,
+            totalClicks: 0,
+            tapLevel: 1,
+            energyLevel: 1,
+            tasks: [false, false],
+            achievements: []
+        };
 
-    <!-- Регистрация -->
-    <button class="btn" onclick="registerAccount()">👤 Регистрация / Привязка Telegram</button>
+        const TAP_COST = 100;
+        const ENERGY_COST = 200;
 
-    <!-- Инфо -->
-    <small style="color:#666; display:block; margin-top:15px;">
-        ⚡ Энергия: +1 / 5 сек | 🪙 1 тап = 0.001 KOIN
-    </small>
-</div>
+        // ============ ЗАГРУЗКА ============
+        window.onload = function() {
+            loadGame();
+            setTimeout(function() {
+                document.getElementById('preloader').style.display = 'none';
+            }, 500);
+        };
 
-<script>
-// ====== ЖИВЫЕ ОБОИ - ПАДАЮЩИЕ ЗВЁЗДЫ ======
-const canvas = document.getElementById('stars');
-const ctx = canvas.getContext('2d');
-let stars = [];
-let animFrame;
-
-function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
-
-function createStar() {
-    return {
-        x: Math.random() * canvas.width,
-        y: -10,
-        speed: Math.random() * 2 + 1,
-        size: Math.random() * 2 + 1,
-        opacity: Math.random() * 0.8 + 0.2
-    };
-}
-
-function initStars(count) {
-    stars = [];
-    for (let i = 0; i < count; i++) {
-        const s = createStar();
-        s.y = Math.random() * canvas.height;
-        stars.push(s);
-    }
-}
-
-function drawStars() {
-    if (!ctx) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    stars.forEach(s => {
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255,255,255,${s.opacity})`;
-        ctx.fill();
-        s.y += s.speed;
-        if (s.y > canvas.height + 10) { 
-            Object.assign(s, createStar()); 
-        }
-    });
-    animFrame = requestAnimationFrame(drawStars);
-}
-initStars(150);
-drawStars();
-// ====== ОСНОВНЫЕ ПЕРЕМЕННЫЕ ИГРЫ ======
-const DEFAULT_STATE = {
-    coins: 0,
-    energy: 10,
-    maxEnergy: 10,
-    energyRegenTime: 5000,
-    refCount: 0,
-    telegramId: null,
-    username: null,
-    registered: false,
-    wallet: null
-};
-
-let state = { ...DEFAULT_STATE };
-let energyRegenTimer = null;
-const TAP_VALUE = 0.001;
-
-// Элементы DOM
-const coin = document.getElementById('coin');
-const coinCount = document.getElementById('coinCount');
-const energyText = document.getElementById('energyText');
-const energyFill = document.getElementById('energyFill');
-const refCountEl = document.getElementById('refCount');
-
-// ====== СОХРАНЕНИЕ И ЗАГРУЗКА ======
-function saveState() {
-    try {
-        localStorage.setItem('rbCoinState', JSON.stringify(state));
-    } catch(e) {
-        console.error('Ошибка сохранения:', e);
-    }
-}
-
-function loadState() {
-    try {
-        const saved = localStorage.getItem('rbCoinState');
-        if (saved) {
-            state = { ...DEFAULT_STATE, ...JSON.parse(saved) };
-        }
-    } catch(e) { 
-        console.error('Ошибка загрузки:', e);
-        state = { ...DEFAULT_STATE };
-    }
-}
-
-function initTelegram() {
-    try {
-        if (window.Telegram && window.Telegram.WebApp) {
-            const tg = window.Telegram.WebApp;
-            tg.ready();
-            const user = tg.initDataUnsafe?.user;
-            if (user) {
-                state.telegramId = user.id;
-                state.username = user.username || user.first_name;
-                state.registered = true;
-                saveState();
+        function loadGame() {
+            let saved = localStorage.getItem('rbcoin');
+            if (saved) {
+                gameData = JSON.parse(saved);
             }
+            updateUI();
         }
-    } catch(e) {
-        console.error('Ошибка Telegram:', e);
-    }
-}
 
-// ====== РЕФЕРАЛЬНАЯ СИСТЕМА ======
-function getReferralLink() {
-    const userId = state.telegramId || generateLocalId();
-    const baseUrl = 'https://t.me/RB_coin_official_bot?start='; // ← Бот: @RB_coin_official_bot
-    return baseUrl + userId;
-}
-
-function generateLocalId() {
-    try {
-        if (!localStorage.getItem('rbLocalUserId')) {
-            localStorage.setItem('rbLocalUserId', Math.random().toString(36).slice(2));
+        function saveGame() {
+            localStorage.setItem('rbcoin', JSON.stringify(gameData));
         }
-        return localStorage.getItem('rbLocalUserId');
-    } catch(e) {
-        return Math.random().toString(36).slice(2);
-    }
-}
 
-function checkReferral() {
-    try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const startParam = urlParams.get('start') || 
-                          (window.Telegram?.WebApp?.initDataUnsafe?.start_param);
-
-        if (startParam) {
-            const referrerId = startParam;
-            localStorage.setItem('rbReferredBy', referrerId);
-            state.refCount++;
-            saveState();
-            updateReferralUI();
-            showToast('🎁 Вы пришли по реферальной ссылке!');
+        // ============ ОБНОВЛЕНИЕ ИНТЕРФЕЙСА ============
+        function updateUI() {
+            document.getElementById('balance').textContent = gameData.balance.toLocaleString();
+            document.getElementById('clickPower').textContent = gameData.clickPower;
+            document.getElementById('energy').textContent = Math.floor(gameData.energy);
+            document.getElementById('energyBar').style.width = (gameData.energy / gameData.maxEnergy * 100) + '%';
+            document.getElementById('totalClicks').textContent = gameData.totalClicks.toLocaleString();
+            document.getElementById('tapLevel').textContent = gameData.tapLevel;
+            document.getElementById('energyLevel').textContent = gameData.energyLevel;
+            document.getElementById('tapCost').textContent = TAP_COST * gameData.tapLevel;
+            document.getElementById('energyCost').textContent = ENERGY_COST * gameData.energyLevel;
+            document.getElementById('passiveIncome').textContent = gameData.clickPower * 100;
+            document.getElementById('level').textContent = Math.floor(gameData.totalClicks / 100) + 1;
         }
-    } catch(e) {
-        console.error('Ошибка реферальной системы:', e);
-    }
-}
 
-function copyReferral() {
-    const link = getReferralLink();
-
-    // Копирование в буфер обмена
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(link).then(() => {
-            showToast('✅ Ссылка скопирована!');
-        }).catch(() => {
-            fallbackCopy(link);
-        });
-    } else {
-        fallbackCopy(link);
-    }
-
-    // Отправка в Telegram
-    try {
-        if (window.Telegram?.WebApp) {
-            window.Telegram.WebApp.sendData(JSON.stringify({
-                action: 'share_referral',
-                link: link
-            }));
-        }
-    } catch(e) {
-        console.error('Ошибка отправки в Telegram:', e);
-    }
-}
-
-function fallbackCopy(text) {
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    textarea.style.position = 'fixed';
-    textarea.style.opacity = '0';
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textarea);
-    showToast('✅ Ссылка скопирована!');
-}
-
-function updateReferralUI() {
-    if (refCountEl) {
-        refCountEl.textContent = state.refCount;
-    }
-}
-// ====== ЭНЕРГИЯ И КЛИКИ ======
-function updateEnergyDisplay() {
-    if (!energyText || !energyFill) return;
-
-    energyText.textContent = `⚡ ${Math.floor(state.energy)} / ${state.maxEnergy}`;
-    energyFill.style.width = (state.energy / state.maxEnergy * 100) + '%';
-
-    if (state.energy <= 0) {
-        energyFill.style.background = '#f00';
-    } else {
-        energyFill.style.background = 'linear-gradient(90deg, #00f, #0ff)';
-    }
-}
-
-function startEnergyRegen() {
-    if (energyRegenTimer) clearInterval(energyRegenTimer);
-    energyRegenTimer = setInterval(() => {
-        if (state.energy < state.maxEnergy) {
-            state.energy += 1;
-            saveState();
-            updateEnergyDisplay();
-        }
-    }, state.energyRegenTime);
-}
-
-function tapCoin() {
-    if (!state || !coin) return;
-
-    if (state.energy < 1) {
-        showToast('Нет энергии! Подождите ⚡');
-        return;
-    }
-
-    state.energy -= 1;
-    state.coins += TAP_VALUE;
-    saveState();
-
-    if (coinCount) {
-        coinCount.textContent = state.coins.toFixed(3);
-    }
-    updateEnergyDisplay();
-
-    coin.style.transform = 'scale(0.9)';
-    setTimeout(() => { coin.style.transform = 'scale(1)'; }, 100);
-
-    showFloatingNumber('+' + TAP_VALUE);
-}
-
-// ====== ДОПОЛНИТЕЛЬНЫЕ ФУНКЦИИ ======
-function showFloatingNumber(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    div.style.cssText = `
-        position: fixed; left: 50%; top: 40%;
-        transform: translateX(-50%); color: #ffd700;
-        font-size: 24px; font-weight: bold; pointer-events: none;
-        z-index: 10; text-shadow: 0 0 10px #ffd700;
-        animation: floatUp 1s forwards;
-    `;
-    document.body.appendChild(div);
-    setTimeout(() => div.remove(), 1000);
-}
-
-function showToast(msg) {
-    const toast = document.createElement('div');
-    toast.textContent = msg;
-    toast.style.cssText = `
-        position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-        background: rgba(0,0,0,0.8); color: #fff; padding: 10px 20px;
-        border-radius: 10px; z-index: 100; border: 1px solid #ffd700;
-        animation: slideDown 0.3s forwards;
-    `;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 2000);
-}
-
-// ====== ВИБРАЦИЯ ======
-function vibrate(duration = 20) {
-    if (navigator.vibrate) {
-        navigator.vibrate(duration);
-    }
-}
-
-function addVibrationToTap() {
-    const coin = document.getElementById('coin');
-    if (coin) {
-        coin.addEventListener('click', () => vibrate(20));
-    }
-}
-// ====== FIREBASE ИНИЦИАЛИЗАЦИЯ ======
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const firebaseConfig = {
-    apiKey: "AIzaSyCMh72QkCwgUKtSb89b38FXsIB8iVn2xd0",
-    authDomain: "rbcoin-official.firebaseapp.com",
-    projectId: "rbcoin-official",
-    storageBucket: "rbcoin-official.firebasestorage.app",
-    messagingSenderId: "709344104087",
-    appId: "1:709344104087:web:d7c7551a3e200858e963d2",
-    measurementId: "G-PPBH2KE7VW"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-// ====== КОШЕЛЁК И РЕГИСТРАЦИЯ ======
-function validateWallet(address) {
-    const tonPattern = /^(EQ|UQ)[A-Za-z0-9_-]{46,48}$/;
-    return tonPattern.test(address);
-}
-
-function connectWallet() {
-    if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.sendData(JSON.stringify({ action: 'connect_wallet' }));
-        showToast('Запрос отправлен!');
-    } else {
-        const wallet = prompt('Введите адрес вашего TON-кошелька:');
-        if (wallet) {
-            if (validateWallet(wallet)) {
-                state.wallet = wallet;
-                saveState();
-                showToast('✅ Кошелёк привязан: ' + wallet.slice(0, 6) + '...');
+        // ============ ТАП ПО МОНЕТЕ ============
+        document.getElementById('tapCoin').addEventListener('click', function(e) {
+            if (gameData.energy >= 1) {
+                gameData.balance += gameData.clickPower;
+                gameData.energy -= 1;
+                gameData.totalClicks++;
+                showTapEffect(e.clientX, e.clientY, '+' + gameData.clickPower);
+                updateUI();
+                saveGame();
             } else {
-                showToast('❌ Некорректный адрес TON кошелька');
+                showToast('Нет энергии! Подожди ⏳', 'error');
+            }
+        });
+
+        // Эффект при тапе
+        function showTapEffect(x, y, text) {
+            let el = document.createElement('div');
+            el.textContent = text;
+            el.style.cssText = 'position:fixed;font-size:24px;font-weight:bold;color:#ffd700;pointer-events:none;z-index:999;';
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+            document.body.appendChild(el);
+            setTimeout(function() {
+                el.style.transition = 'all 1s';
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(-100px)';
+            }, 10);
+            setTimeout(function() { el.remove(); }, 1000);
+        }
+
+        // ============ УЛУЧШЕНИЯ ============
+        function upgradeTap() {
+            let cost = TAP_COST * gameData.tapLevel;
+            if (gameData.balance >= cost) {
+                gameData.balance -= cost;
+                gameData.clickPower++;
+                gameData.tapLevel++;
+                showToast('Сила тапа улучшена! 🎉', 'success');
+                updateUI();
+                saveGame();
+            } else {
+                showToast('Недостаточно RB! ❌', 'error');
             }
         }
-    }
-}
 
-function registerAccount() {
-    if (state.registered) {
-        showToast('✅ Вы уже авторизованы!');
-        return;
-    }
-
-    if (window.Telegram?.WebApp) {
-        const tg = window.Telegram.WebApp;
-        const user = tg.initDataUnsafe?.user;
-        if (user) {
-            state.telegramId = user.id;
-            state.username = user.username || user.first_name;
-            state.registered = true;
-            state.registrationDate = new Date().toISOString();
-            saveState();
-            showToast('✅ Авторизация успешна!');
-            syncToFirebase();
-        } else {
-            showToast('❌ Не удалось получить данные Telegram');
+        function upgradeEnergy() {
+            let cost = ENERGY_COST * gameData.energyLevel;
+            if (gameData.balance >= cost) {
+                gameData.balance -= cost;
+                gameData.maxEnergy += 500;
+                gameData.energyLevel++;
+                showToast('Макс. энергия увеличена! ⚡', 'success');
+                updateUI();
+                saveGame();
+            } else {
+                showToast('Недостаточно RB! ❌', 'error');
+            }
         }
-    } else {
-        showToast('❌ Откройте через Telegram WebApp');
-    }
-}
 
-// ====== FIREBASE СИНХРОНИЗАЦИЯ ======
-async function syncToFirebase() {
-    try {
-        const userRef = doc(db, 'users', state.telegramId || 'guest');
-        await setDoc(userRef, {
-            coins: state.coins,
-            energy: state.energy,
-            maxEnergy: state.maxEnergy,
-            wallet: state.wallet,
-            username: state.username,
-            referralCount: state.referralCount,
-            lastSync: new Date().toISOString()
-        });
-        console.log('✅ Данные синхронизированы с Firebase');
-    } catch(e) {
-        console.error('❌ Ошибка синхронизации:', e);
-    }
-}
-
-async function loadFromFirebase() {
-    try {
-        const userRef = doc(db, 'users', state.telegramId || 'guest');
-        const docSnap = await getDoc(userRef);
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            state.coins = data.coins || state.coins;
-            state.energy = data.energy || state.energy;
-            state.maxEnergy = data.maxEnergy || state.maxEnergy;
-            state.wallet = data.wallet || state.wallet;
-            console.log('✅ Данные загружены из Firebase');
+        // ============ ЗАДАНИЯ ============
+        function completeTask(index) {
+            if (gameData.tasks[index]) {
+                showToast('Задание уже выполнено!', 'error');
+                return;
+            }
+            gameData.tasks[index] = true;
+            if (index === 0) {
+                gameData.balance += 500;
+            } else if (index === 1) {
+                gameData.balance += 1000;
+            }
+            showToast('Задание выполнено! +RB 🎁', 'success');
+            updateUI();
+            saveGame();
         }
-    } catch(e) {
-        console.error('❌ Ошибка загрузки:', e);
-    }
-}
 
-// ====== ИНИЦИАЛИЗАЦИЯ ======
-function init() {
-    loadState();
-    initTelegram();
-    checkReferral();
-
-    if (state.registered) {
-        loadFromFirebase().then(() => {
-            updateEnergyDisplay();
-            updateReferralUI();
-            coinCount.textContent = state.coins.toFixed(3);
-            startEnergyRegen();
-        });
-    } else {
-        updateEnergyDisplay();
-        updateReferralUI();
-        coinCount.textContent = state.coins.toFixed(3);
-        startEnergyRegen();
-    }
-
-    addVibrationToTap();
-    console.log('✅ RB coin запущен!');
-    console.log('👤 Пользователь:', state.username || 'Гость');
-    console.log('🪙 Баланс:', state.coins.toFixed(3), 'KOIN');
-}
-
-// Запуск при загрузке
-document.addEventListener('DOMContentLoaded', init);
-
-// Обработка паузы при сворачивании
-document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-        saveState();
-        if (state.registered) {
-            syncToFirebase();
+        // ============ МОДАЛКА ============
+        function showModal(content) {
+            document.getElementById('modalBody').innerHTML = content;
+            document.getElementById('modal').classList.add('active');
         }
-    }
-});
 
-// Автосинхронизация каждые 30 секунд
-setInterval(() => {
-    if (state.registered && navigator.onLine) {
-        syncToFirebase();
-    }
-}, 30000);
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        // ============ ДОСТИЖЕНИЯ ============
+        function showAchievements() {
+            let content = '<h2>🏆 Достижения</h2><br>';
+            if (gameData.totalClicks >= 100) {
+                content += '<div>💯 Сделано 100 тапов ✅</div>';
+            } else {
+                content += '<div>💯 Сделать 100 тапов (Осталось: ' + (100 - gameData.totalClicks) + ')</div>';
+            }
+            if (gameData.balance >= 1000) {
+                content += '<div>💰 Заработать 1000 RB ✅</div>';
+            } else {
+                content += '<div>💰 Заработать 1000 RB (Осталось: ' + (1000 - gameData.balance) + ')</div>';
+            }
+            if (gameData.tapLevel >= 5) {
+                content += '<div>👆 Улучшить тап до 5 ур. ✅</div>';
+            } else {
+                content += '<div>👆 Улучшить тап до 5 ур.</div>';
+            }
+            showModal(content);
+        }
+
+        // ============ ТОСТ-УВЕДОМЛЕНИЕ ============
+        function showToast(text, type) {
+            let toast = document.createElement('div');
+            toast.className = 'toast ' + (type || '');
+            toast.textContent = text;
+            document.body.appendChild(toast);
+            setTimeout(function() { toast.remove(); }, 2000);
+        }
+
+        // ============ ВОССТАНОВЛЕНИЕ ЭНЕРГИИ ============
+        setInterval(function() {
+            if (gameData.energy < gameData.maxEnergy) {
+                gameData.energy += gameData.maxEnergy * 0.01; // 1% от макс. каждые 3 сек
+                if (gameData.energy > gameData.maxEnergy) {
+                    gameData.energy = gameData.maxEnergy;
+                }
+                updateUI();
+                saveGame();
+            }
+        }, 3000);
+    </script>
+</body>
+</html>
